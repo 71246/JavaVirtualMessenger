@@ -1,18 +1,16 @@
 import java.io.*;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
-public class MessengerUtilities {
-    public boolean checkForKey(Map<String, String> userList, String nameToCheck) {
-        if (userList.containsKey(nameToCheck))
-            return true;
+class MessengerUtilities {
+
+    private boolean checkForKey(Map<String, String> userList, String nameToCheck) {
+        if (userList.containsKey(nameToCheck)) return true;
 
         return false;
     }
 
-    public String checkForValue(Map<String, String> userList, String nameToCheck) {
+    private String checkForValue(Map<String, String> userList, String nameToCheck) {
         MessengerUtilities messUtil = new MessengerUtilities();
 
         if (messUtil.checkForKey(userList, nameToCheck))
@@ -21,20 +19,45 @@ public class MessengerUtilities {
         return null;
     }
 
-    public void createTextFileIfNotCreated(Path filePath) throws IOException {
+    void createTextFileIfNotCreated(Path filePath) throws IOException {
         File userList = new File(String.valueOf(filePath));
 
         if (!userList.exists())
             userList.createNewFile();
     }
 
-    public void appendUserNamePswToCSV(String stringToAdd, Path filePath) throws IOException {
+    private void appendUserNamePswToCSV(String stringToAdd, Path filePath) throws IOException {
         FileWriter writer = new FileWriter(String.valueOf(filePath), true);
         writer.append("\n" + stringToAdd);
         writer.close();
     }
 
-    public Map<String, String> readFromCsvIntoMap(Path filepath) throws IOException {
+    void removeUserFromUserList(Map<String, String> userList, String nameToRemove, Path filePath, String delimiter) throws IOException {
+        Iterator<String> iterator = userList.keySet().iterator();
+
+        // Iterate over all the elements
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            if (userList.get(key).equals(nameToRemove)) {
+                iterator.remove();
+                //break;
+            }
+        }
+        System.out.println(userList);
+
+        FileWriter writer = new FileWriter(String.valueOf(filePath), false);
+
+        writer.append("username;password");
+        writer.append("\n");
+
+        for(Map.Entry<String, String> user: userList.entrySet()) {
+            writer.append(user.getKey() + delimiter + user.getValue());
+            writer.append("\n");
+        }
+        writer.close();
+    }
+
+    Map<String, String> readFromCsvIntoMap(Path filepath, String delimiter) throws IOException {
         Map<String, String> map = new HashMap<>();
         BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(filepath)));
         String line;
@@ -42,18 +65,19 @@ public class MessengerUtilities {
         String[] splitLines;
 
         while ((line = bufferedReader.readLine()) != null) {
-            splitLines = line.split(";");
+            splitLines = line.split(delimiter);
             map.put(splitLines[0], splitLines[1]);
         }
+        bufferedReader.close();
         return map;
     }
 
-    public void registerNewUser(Map<String, String> userList, String csvDelimiter, Path userListPath) throws IOException {
+    void registerNewUser(Map<String, String> userList, String csvDelimiter, Path userListPath) throws IOException {
         String enteredUserName;
         String enteredPassword;
         MessengerUtilities messUtil = new MessengerUtilities();
         Scanner scanner = new Scanner(System.in);
-        String passwordPattern = "^(.*[a-z])(.*[A-Z])(.*\\d).{4,8}$";
+        String passwordPattern = "^(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\\s).*$";
 
         //Prompt the user for a username
         System.out.println("Please enter your desired user name:");
@@ -82,7 +106,7 @@ public class MessengerUtilities {
         System.out.println("New user successfully created.\nWelcome to JVM, " + enteredUserName + "!");
     }
 
-    public void logInUser(Map<String, String> userList, String csvDelimiter, Path userListPath) {
+    void logInUser(Map<String, String> userList, String csvDelimiter, Path userListPath) {
         String enteredUserName;
         String enteredPassword = "";
         int triesLeft = 3;

@@ -19,7 +19,10 @@ public class Main {
         messUtil.createTextFileIfNotCreated(userListPath);
 
         //Map the user list
-        userList = messUtil.readFromCsvIntoMap(userListPath);
+        userList = messUtil.readFromCsvIntoMap(userListPath, csvDelimiter);
+
+        String nameToRemove = "Sander";
+        messUtil.removeUserFromUserList(userList, nameToRemove, userListPath, csvDelimiter);
 
         //Welcome the user and provide initial options
         System.out.println("Welcome to Java Virtual Messenger!\n" + "Please register or log in. (REG/LOGIN)");
