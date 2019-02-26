@@ -1,16 +1,17 @@
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 class MessengerUtilities {
 
-    private boolean checkForKey(Map<String, String> userList, String nameToCheck) {
+    boolean checkForKey(Map<String, String> userList, String nameToCheck) {
         if (userList.containsKey(nameToCheck)) return true;
 
         return false;
     }
 
-    private String checkForValue(Map<String, String> userList, String nameToCheck) {
+    String checkForValue(Map<String, String> userList, String nameToCheck) {
         MessengerUtilities messUtil = new MessengerUtilities();
 
         if (messUtil.checkForKey(userList, nameToCheck))
@@ -20,18 +21,33 @@ class MessengerUtilities {
     }
 
     void createTextFileIfNotCreated(Path filePath) throws IOException {
-        File userList = new File(String.valueOf(filePath));
+        File file = new File(String.valueOf(filePath));
 
-        if (!userList.exists())
-            userList.createNewFile();
+        if (filePath != null && !file.exists())
+            file.createNewFile();
+    }
+
+    String createMessageTxtFile(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
+        File file1 = new File(stringToCheck + delimiter + anotherStringToCheck + suffix);
+        File file2 = new File(anotherStringToCheck + delimiter + stringToCheck + suffix);
+
+        if (!file1.exists() && !file2.exists()) {
+            file1.createNewFile();
+            return file1.getName();
+        } else if (file1.exists()) {
+            return file1.getName();
+        } else {
+            return file2.getName();
+        }
     }
 
     private void appendUserNamePswToCSV(String stringToAdd, Path filePath) throws IOException {
         FileWriter writer = new FileWriter(String.valueOf(filePath), true);
-        writer.append("\n" + stringToAdd);
+        writer.append("\n");
+        writer.append(stringToAdd);
         writer.close();
     }
-
+    /*
     void removeUserFromUserList(Map<String, String> userList, String nameToRemove, Path filePath, String delimiter) throws IOException {
         Iterator<String> iterator = userList.keySet().iterator();
 
@@ -55,7 +71,7 @@ class MessengerUtilities {
             writer.append("\n");
         }
         writer.close();
-    }
+    }*/
 
     Map<String, String> readFromCsvIntoMap(Path filepath, String delimiter) throws IOException {
         Map<String, String> map = new HashMap<>();
@@ -72,7 +88,7 @@ class MessengerUtilities {
         return map;
     }
 
-    void registerNewUser(Map<String, String> userList, String csvDelimiter, Path userListPath) throws IOException {
+    User registerNewUser(Map<String, String> userList, String csvDelimiter, Path userListPath) throws IOException {
         String enteredUserName;
         String enteredPassword;
         MessengerUtilities messUtil = new MessengerUtilities();
@@ -90,7 +106,7 @@ class MessengerUtilities {
         }
 
         //Prompt the user for a password, explain the requirements
-        System.out.println("Your username is " + enteredUserName + ".\nPlease provide a password.\nThe password can be 4-8 characters long and it must contain " +
+        System.out.println("Your username is " + enteredUserName + ".\nPlease provide a password.\nThe password has to be at least 8 characters long and it must contain " +
                 "\nat least one upper case, one lower case and one numeric character.");
         enteredPassword = scanner.next();
 
@@ -104,9 +120,11 @@ class MessengerUtilities {
         messUtil.appendUserNamePswToCSV(enteredUserName + csvDelimiter + enteredPassword, userListPath);
 
         System.out.println("New user successfully created.\nWelcome to JVM, " + enteredUserName + "!");
+
+        return new User(enteredUserName, enteredPassword);
     }
 
-    void logInUser(Map<String, String> userList, String csvDelimiter, Path userListPath) {
+    User logInUser(Map<String, String> userList) {
         String enteredUserName;
         String enteredPassword = "";
         int triesLeft = 3;
@@ -147,5 +165,6 @@ class MessengerUtilities {
         }
 
         System.out.println("\nWelcome back, " + enteredUserName + "!");
+        return new User(enteredUserName, enteredPassword);
     }
 }
