@@ -1,17 +1,17 @@
 public class User {
     private String userName;
-    private String passWord;
+    private String password;
 
-    public User(String userName, String passWord) {
+    public User(String userName, String password) {
         this.userName = userName;
-        this.passWord = passWord;
+        this.password = password;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public String getPassWord() {
-        return passWord;
+    public String getPassword() {
+        return password;
     }
 }
