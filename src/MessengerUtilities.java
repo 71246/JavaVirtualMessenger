@@ -27,7 +27,7 @@ class MessengerUtilities {
             file.createNewFile();
     }
 
-    String createMessageTxtFile(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
+    String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
         File file1 = new File(stringToCheck + delimiter + anotherStringToCheck + suffix);
         File file2 = new File(anotherStringToCheck + delimiter + stringToCheck + suffix);
 
@@ -140,7 +140,7 @@ class MessengerUtilities {
             enteredUserName = scanner.next();
         }
 
-        System.out.println("Please enter you password:");
+        System.out.println("Please enter your password:");
         enteredPassword = scanner.next();
 
         while (triesLeft > 0) {
