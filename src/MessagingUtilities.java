@@ -1,9 +1,9 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -37,26 +37,32 @@ public class MessagingUtilities {
 
     private void saveMessageToCSV(String userName, String message, Path messagesPath, String timeStamp) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
-        messUtil.createTextFileIfNotCreated(messagesPath);
+        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(messagesPath);
 
         FileWriter writer = new FileWriter(String.valueOf(messagesPath), true);
-        writer.append("\n");
+        if (resultOfFileCreation == 0) {
+            writer.append("\n");
+        }
+
+        writer.append("<timestamp>");
         writer.append(timeStamp);
         writer.append("\n");
         writer.append(userName);
         writer.append(" says:\n");
         writer.append(message);
-        writer.append("\n");
         writer.close();
     }
 
     private void saveSenderAndTimeStampToNewMessageLog(String userName, String recipient, String delimiter, String timeStamp) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
         Path newMessageLogPath = Paths.get(recipient + newMessageLogSuffix);
-        messUtil.createTextFileIfNotCreated(newMessageLogPath);
+        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
 
         FileWriter writer = new FileWriter(String.valueOf(newMessageLogPath), true);
-        writer.append("\n");
+        if (resultOfFileCreation == 0) {
+            writer.append("\n");
+        }
+
         writer.append(userName);
         writer.append(delimiter);
         writer.append(timeStamp);
@@ -64,27 +70,20 @@ public class MessagingUtilities {
     }
 
     private String createTimeStamp() {
-        return String.valueOf(ZonedDateTime.now());
+        String timeStampPattern = "yyyy-MM-dd HH:mm:ss.SSS";
+        SimpleDateFormat sdfDate = new SimpleDateFormat(timeStampPattern);
+        Date now = new Date();
+        return sdfDate.format(now);
     }
 
-    List<String> getNewMessagesLog(String userName, String delimiter) throws IOException {
-        List<String> newMessageLogList = new ArrayList<>();
+    private List<String> getNewMessagesLog(String userName) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
         Path newMessageLogPath = Paths.get(userName + newMessageLogSuffix);
-
-        messUtil.createTextFileIfNotCreated(newMessageLogPath);
-
-        BufferedReader br = new BufferedReader(new FileReader(String.valueOf(newMessageLogPath)));
-        String line;
-
-        while ((line = br.readLine()) != null) {
-            newMessageLogList.add(line);
-        }
-
-        return newMessageLogList;
+        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
+        return Files.readAllLines(Paths.get(String.valueOf(newMessageLogPath)));
     }
 
-    Map<String, Integer> countNumberOfNewMessages(List<String> newMessageLogList, String delimiter) {
+    private Map<String, Integer> countNumberOfNewMessages(List<String> newMessageLogList, String delimiter) {
         Map<String, Integer> newMessagesBySender = new HashMap<>();
 
         for (String item: newMessageLogList) {
@@ -99,12 +98,13 @@ public class MessagingUtilities {
         return newMessagesBySender;
     }
 
-    void checkMessages(User user, String delimiter) throws IOException {
+    void checkMessages(User user, String delimiter) throws IOException, ParseException {
+        MessengerUtilities messUtil = new MessengerUtilities();
         MessagingUtilities messagingUtilities = new MessagingUtilities();
         Scanner scanner = new Scanner(System.in);
         String numberOfMessagesSuffix;
 
-        List<String> newMessagesLogList = messagingUtilities.getNewMessagesLog(user.getUserName(), delimiter);
+        List<String> newMessagesLogList = messagingUtilities.getNewMessagesLog(user.getUserName());
         Map<String, Integer> newMessagesBySender = messagingUtilities.countNumberOfNewMessages(newMessagesLogList, delimiter);
 
         if (newMessagesBySender.size() > 0) {
@@ -123,20 +123,36 @@ public class MessagingUtilities {
 
             if (!newMessagesBySender.containsKey(answer)) {
                 System.out.println("You don't have any message from that user!");
+                return;
             }
 
+            String timeStampPattern = "yyyy-MM-dd HH:mm:ss.SSS";
             String firstUnreadMessage = messagingUtilities.getEarliestUnreadMessageTime(answer, newMessagesLogList, delimiter);
-            System.out.println(firstUnreadMessage);
+            Date date2 = new SimpleDateFormat(timeStampPattern).parse(firstUnreadMessage);
+
+            String userMessageFilePath = messUtil.createMessageTxtFileIfNotCreated(user.getUserName(), answer, "-", ".txt");
+            fetchNewMessages(date2, userMessageFilePath, timeStampPattern);
         } else {
             System.out.println("You don't have any new messages!");
         }
     }
 
-    void fetchMessages(String sender, String timeStamp) {
+    private void fetchNewMessages(Date firstUnreadMessage, String filePath, String timeStampPattern) throws IOException, ParseException {
+        List<String> lines = Files.readAllLines(Paths.get(filePath));
 
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("<timestamp>") ) {
+                Date dateOfMessage = new SimpleDateFormat(timeStampPattern).parse(lines.get(i).replace("<timestamp>", ""));
+                if (dateOfMessage.compareTo(firstUnreadMessage) <= 0) {
+                    if (!lines.get(i).contains("<timestamp>") && !lines.get(i).equals("")) {
+                        System.out.println(lines.get(i));
+                    }
+                }
+            }
+        }
     }
 
-    String getEarliestUnreadMessageTime(String sender, List<String> newMessageLogList, String delimiter) {
+    private String getEarliestUnreadMessageTime(String sender, List<String> newMessageLogList, String delimiter) {
         for (int i = 0; i < newMessageLogList.size(); i++) {
             String[] splitLine = newMessageLogList.get(i).split(delimiter);
 

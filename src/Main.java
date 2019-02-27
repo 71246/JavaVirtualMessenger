@@ -1,13 +1,14 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
 
         final Path USER_LIST_PATH = Paths.get("MessengerUserList.txt");
         final String CSV_DELIMITER = ";";
@@ -18,7 +19,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         //Create the user list file if it doesn't yet exist
-        messUtil.createTextFileIfNotCreated(USER_LIST_PATH);
+        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(USER_LIST_PATH);
 
         //Map the user list
         userList = messUtil.readFromCsvIntoMap(USER_LIST_PATH, CSV_DELIMITER);

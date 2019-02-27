@@ -1,28 +1,8 @@
 
-2019-02-27T10:41:37.976+02:00[Europe/Helsinki]
+<timestamp>2019-02-27 21:26:20.401
 Sander says:
-Hi, Horsey!
+Message1
 
-2019-02-27T10:43:28.024+02:00[Europe/Helsinki]
+<timestamp>2019-02-27 21:26:43.063
 Sander says:
-Hi, Horsey!
-
-2019-02-27T13:31:51.905+02:00[Europe/Helsinki]
-Horse says:
-Hiya!
-
-2019-02-27T13:32:09.701+02:00[Europe/Helsinki]
-Horse says:
-Hiya, again!
-
-2019-02-27T13:34:17.834+02:00[Europe/Helsinki]
-Horse says:
-Hiya, Sander!
-
-2019-02-27T13:35:45.073+02:00[Europe/Helsinki]
-Horse says:
-Hiya, Sander!
-
-2019-02-27T13:40:22.028+02:00[Europe/Helsinki]
-Sander says:
-Hiya, horsie!
+Message2

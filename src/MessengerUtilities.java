@@ -20,11 +20,14 @@ class MessengerUtilities {
         return null;
     }
 
-    void createTextFileIfNotCreated(Path filePath) throws IOException {
+    Integer createTextFileIfNotCreated(Path filePath) throws IOException {
         File file = new File(String.valueOf(filePath));
 
-        if (filePath != null && !file.exists())
+        if (filePath != null && !file.exists()) {
             file.createNewFile();
+            return -1;
+        }
+        return 0;
     }
 
     String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
