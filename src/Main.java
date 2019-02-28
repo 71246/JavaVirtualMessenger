@@ -26,7 +26,7 @@ public class Main {
 
         //Welcome the user and provide initial options
         System.out.println("Welcome to Java Virtual Messenger!\n" + "Please register or log in. (REG/LOGIN)");
-        answer = scanner.next();
+        answer = scanner.nextLine();
 
         //Initialize User class
         User user;
@@ -43,17 +43,24 @@ public class Main {
                 break;
             } else {
                 System.out.println("Unknown command. Please try again!");
-                answer = scanner.next();
+                answer = scanner.nextLine();
             }
         }
 
         //Messaging processes
         while (true) {
             System.out.println("\nDo you wish to send a message, check new messages or log out? (SEND/CHECK/LOGOUT)");
-            answer = scanner.next();
+            answer = scanner.nextLine();
 
             if (answer.equalsIgnoreCase("SEND")) {
-                messagingUtilities.composeMessage(user.getUserName(), userList, CSV_DELIMITER, "");
+                System.out.println("Do you wish to start a group chat? (Y/N)");
+                answer = scanner.nextLine();
+
+                if (answer.equalsIgnoreCase("Y")) {
+                    messagingUtilities.composeMessage(user.getUserName(), userList, CSV_DELIMITER, null, true);
+                } else {
+                    messagingUtilities.composeMessage(user.getUserName(), userList, CSV_DELIMITER, null, false);
+                }
             } else if (answer.equalsIgnoreCase("CHECK")) {
                 messagingUtilities.checkMessages(user, userList, CSV_DELIMITER);
             } else if (answer.equalsIgnoreCase("LOGOUT")) {

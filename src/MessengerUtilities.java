@@ -30,6 +30,28 @@ class MessengerUtilities {
         return 0;
     }
 
+    String searchForFileNameContainingSubstring(ArrayList<String> recipients) {
+        File file = new File("");
+        boolean foundAllSubstrings = true;
+
+        if (file.exists() && file.isDirectory()) {
+            String[] files = file.list(); //get the files in String format.
+            for (String fileName : files) {
+                for (String element: recipients) {
+                    if (!fileName.contains(element)) {
+                        foundAllSubstrings = false;
+                        break;
+                    }
+                }
+
+                if (foundAllSubstrings) {
+                    return fileName;
+                }
+            }
+        }
+        return "";
+    }
+
     String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
         File file1 = new File(stringToCheck + delimiter + anotherStringToCheck + suffix);
         File file2 = new File(anotherStringToCheck + delimiter + stringToCheck + suffix);
