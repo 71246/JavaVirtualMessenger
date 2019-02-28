@@ -1,13 +1,13 @@
-public class User {
+class User {
     private String userName;
     private String password;
 
-    public User(String userName, String password) {
+    User(String userName, String password) {
         this.userName = userName;
         this.password = password;
     }
 
-    public String getUserName() {
+    String getUserName() {
         return userName;
     }
 }

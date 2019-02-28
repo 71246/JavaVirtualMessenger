@@ -1,8 +1,0 @@
-
-<timestamp>2019-02-27 21:26:20.401
-Sander says:
-Message1
-
-<timestamp>2019-02-27 21:26:43.063
-Sander says:
-Message2

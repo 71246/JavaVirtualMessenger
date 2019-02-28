@@ -11,7 +11,7 @@ class MessengerUtilities {
         return false;
     }
 
-    String checkForValue(Map<String, String> userList, String nameToCheck) {
+    private String checkForValue(Map<String, String> userList, String nameToCheck) {
         MessengerUtilities messUtil = new MessengerUtilities();
 
         if (messUtil.checkForKey(userList, nameToCheck))
@@ -50,31 +50,6 @@ class MessengerUtilities {
         writer.append(stringToAdd);
         writer.close();
     }
-    /*
-    void removeUserFromUserList(Map<String, String> userList, String nameToRemove, Path filePath, String delimiter) throws IOException {
-        Iterator<String> iterator = userList.keySet().iterator();
-
-        // Iterate over all the elements
-        while (iterator.hasNext()) {
-            String key = iterator.next();
-            if (userList.get(key).equals(nameToRemove)) {
-                iterator.remove();
-                //break;
-            }
-        }
-        System.out.println(userList);
-
-        FileWriter writer = new FileWriter(String.valueOf(filePath), false);
-
-        writer.append("username;password");
-        writer.append("\n");
-
-        for(Map.Entry<String, String> user: userList.entrySet()) {
-            writer.append(user.getKey() + delimiter + user.getValue());
-            writer.append("\n");
-        }
-        writer.close();
-    }*/
 
     Map<String, String> readFromCsvIntoMap(Path filepath, String delimiter) throws IOException {
         Map<String, String> map = new HashMap<>();
@@ -129,7 +104,7 @@ class MessengerUtilities {
 
     User logInUser(Map<String, String> userList) {
         String enteredUserName;
-        String enteredPassword = "";
+        String enteredPassword;
         int triesLeft = 3;
         MessengerUtilities messUtil = new MessengerUtilities();
         Scanner scanner = new Scanner(System.in);

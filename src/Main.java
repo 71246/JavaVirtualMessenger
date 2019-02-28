@@ -29,7 +29,7 @@ public class Main {
         answer = scanner.next();
 
         //Initialize User class
-        User user = null;
+        User user;
 
         //Registering and logging in
         while (true) {
@@ -49,16 +49,15 @@ public class Main {
 
         //Messaging processes
         while (true) {
-            System.out.println("Do you wish to send a message, check new messages or log out? (SEND/CHECK/LOGOUT)");
+            System.out.println("\nDo you wish to send a message, check new messages or log out? (SEND/CHECK/LOGOUT)");
             answer = scanner.next();
 
             if (answer.equalsIgnoreCase("SEND")) {
-                messagingUtilities.composeMessage(user.getUserName(), userList, CSV_DELIMITER);
+                messagingUtilities.composeMessage(user.getUserName(), userList, CSV_DELIMITER, "");
             } else if (answer.equalsIgnoreCase("CHECK")) {
-                messagingUtilities.checkMessages(user, CSV_DELIMITER);
-
+                messagingUtilities.checkMessages(user, userList, CSV_DELIMITER);
             } else if (answer.equalsIgnoreCase("LOGOUT")) {
-                System.out.println("Goodbye, " + user.getUserName() + "!");
+                System.out.println("\nGoodbye, " + user.getUserName() + "!");
                 System.exit(0);
                 break;
             } else {
