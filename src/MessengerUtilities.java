@@ -72,9 +72,9 @@ class MessengerUtilities {
         }
 
         if (!foundAllSubstrings) {
-            File file3 = new File("C://Users/sander/Downloads/JavaVirtualMessenger/" + fileNameToUse);
+            File file3 = new File(fileNameToUse);
             file3.createNewFile();
-            System.out.println("Group " + String.valueOf(file3.getName()).replace(".txt", "") + " has been created!");
+            System.out.println("Group " + file3.getName().replace(".txt", "") + " has been created!");
             return file3.getName();
         } else {
             return "";

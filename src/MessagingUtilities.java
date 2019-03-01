@@ -56,7 +56,6 @@ class MessagingUtilities {
                 messagesPath = Paths.get(messUtil.createMessageTxtFileIfNotCreated
                         (userName, recipients.get(0), ".txt"));
             } else {
-                System.out.println(recipients);
                 messagesPath = Paths.get(messUtil.searchForFileNameContainingSubstring(recipients, userName, true));
                 groupName = String.valueOf(messagesPath).replace(".txt", "");
             }
@@ -98,7 +97,7 @@ class MessagingUtilities {
 
     private void saveSenderAndTimeStampToNewMessageLog(String userName, ArrayList<String> recipients, String timeStamp, boolean groupChat, String groupName) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
-        System.out.println("2 " + recipients);
+
         for (String recipient : recipients) {
             Path newMessageLogPath = Paths.get(recipient + finalClass.NEW_MESSAGE_LOG_SUFFIX);
             int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
