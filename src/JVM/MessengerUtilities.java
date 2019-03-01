@@ -1,6 +1,7 @@
+package JVM;
+
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 class MessengerUtilities {
@@ -50,7 +51,7 @@ class MessengerUtilities {
         }
 
         //Search for it, if not found create it
-        File file1 = new File("C://Users/sander/Downloads/JavaVirtualMessenger/");
+        File file1 = new File("");
         boolean foundAllSubstrings = false;
 
         if (file1.isDirectory()) {
@@ -74,7 +75,7 @@ class MessengerUtilities {
         if (!foundAllSubstrings) {
             File file3 = new File(fileNameToUse);
             file3.createNewFile();
-            System.out.println("Group " + file3.getName().replace(".txt", "") + " has been created!");
+            if (groupNameExists) System.out.println("Group " + file3.getName().replace(".txt", "") + " has been created!");
             return file3.getName();
         } else {
             return "";

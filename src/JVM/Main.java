@@ -1,9 +1,8 @@
+package JVM;
+
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -27,7 +26,7 @@ public class Main {
         System.out.println("Welcome to Java Virtual Messenger!\n" + "Please register or log in. (REG/LOGIN)");
         answer = scanner.nextLine();
 
-        //Initialize User class
+        //Initialize JVM.User class
         User user;
 
         //Registering and logging in

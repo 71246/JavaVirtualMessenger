@@ -1,3 +1,5 @@
+package JVM;
+
 class User {
     private String userName;
     private String password;
