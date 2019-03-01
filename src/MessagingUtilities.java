@@ -7,45 +7,69 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 class MessagingUtilities {
-    private final String newMessageLogSuffix = "-NewMessageLog.txt";
+    FinalClass finalClass = new FinalClass();
 
-    void composeMessage(String userName, Map<String, String> userList, String delimiter, ArrayList<String> recipients, boolean groupChat) throws IOException {
-        String message, answer, participants;
-        int recipientCounter = 0;
+    void composeMessage(String userName, Map<String, String> userList, ArrayList<String> recipients, boolean groupChat, boolean replying) throws IOException {
+        String message, answer, participant, groupName = "";
         Path messagesPath;
         MessengerUtilities messUtil = new MessengerUtilities();
         Scanner scanner = new Scanner(System.in);
 
-        //For conventional messaging
-        if (recipients.isEmpty()) {
-            System.out.println("Whom do you wish to contact?");
-            recipients.add(scanner.nextLine());
+        if (!replying) {
+            //Private messaging
+            if (!groupChat) {
+                System.out.println("Whom do you wish to contact?");
+                participant = scanner.nextLine();
 
-            while (!messUtil.checkForKey(userList, recipients.get(0))) {
-                System.out.println("Such user doesn't exist! Please enter another.");
-                recipients.set(0, scanner.nextLine());
+                while (true) {
+                    if (!messUtil.checkForKey(userList, participant)) {
+                        System.out.println("Such user doesn't exist! Please enter another.");
+                        participant = scanner.nextLine();
+                    } else {
+                        break;
+                    }
+                }
+
+                recipients.add(participant);
+                messagesPath = Paths.get(messUtil.createMessageTxtFileIfNotCreated
+                        (userName, recipients.get(0), ".txt"));
+            } else {
+                //Group messaging
+                System.out.println("Please enter all the participants of the group chat one by one: (type " + "\"END\"" + " to end the list)");
+
+                do {
+                    participant = scanner.nextLine();
+
+                    while (!participant.equalsIgnoreCase("END") && !messUtil.checkForKey(userList, participant)) {
+                        System.out.println("Such user doesn't exist! Please enter another.");
+                        participant = scanner.nextLine();
+                    }
+
+                    if (!participant.equalsIgnoreCase("END")) recipients.add(participant);
+                } while (!participant.equalsIgnoreCase("END"));
+
+                messagesPath = Paths.get(messUtil.searchForFileNameContainingSubstring(recipients, userName, false));
+                groupName = String.valueOf(messagesPath).replace(".txt", "");
             }
-
-            messagesPath = Paths.get(messUtil.createMessageTxtFileIfNotCreated(userName, recipients.get(0), "-", ".txt"));
         } else {
-            System.out.println("Please enter all the participants of the group chat one by one:");
-
-            while (scanner.hasNext()) {
-                participants = scanner.next();
-                recipients.set(recipientCounter, participants);
-                recipientCounter++;
+            if (!groupChat) {
+                messagesPath = Paths.get(messUtil.createMessageTxtFileIfNotCreated
+                        (userName, recipients.get(0), ".txt"));
+            } else {
+                System.out.println(recipients);
+                messagesPath = Paths.get(messUtil.searchForFileNameContainingSubstring(recipients, userName, true));
+                groupName = String.valueOf(messagesPath).replace(".txt", "");
             }
-            messagesPath = Paths.get(messUtil.searchForFileNameContainingSubstring(recipients));
         }
 
         while (true) {
-            System.out.println("Please enter your message:");
+            System.out.println("\nPlease enter your message:");
             message = scanner.nextLine();
 
             MessagingUtilities messagingUtilities = new MessagingUtilities();
             String currentTimeStamp = createTimeStamp();
             messagingUtilities.saveMessageToCSV(userName, message, messagesPath, currentTimeStamp);
-            messagingUtilities.saveSenderAndTimeStampToNewMessageLog(userName, recipients, delimiter, currentTimeStamp);
+            messagingUtilities.saveSenderAndTimeStampToNewMessageLog(userName, recipients, currentTimeStamp, groupChat, groupName);
 
             System.out.println("\nDo you want to send another? (Y/N)");
             answer = scanner.nextLine();
@@ -72,21 +96,35 @@ class MessagingUtilities {
         writer.close();
     }
 
-    private void saveSenderAndTimeStampToNewMessageLog(String userName, ArrayList<String> recipients, String delimiter, String timeStamp) throws IOException {
+    private void saveSenderAndTimeStampToNewMessageLog(String userName, ArrayList<String> recipients, String timeStamp, boolean groupChat, String groupName) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
-        Path newMessageLogPath = Paths.get(recipients + newMessageLogSuffix);
-        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
+        System.out.println("2 " + recipients);
+        for (String recipient : recipients) {
+            Path newMessageLogPath = Paths.get(recipient + finalClass.NEW_MESSAGE_LOG_SUFFIX);
+            int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
 
-        FileWriter writer = new FileWriter(String.valueOf(newMessageLogPath), true);
+            FileWriter writer = new FileWriter(String.valueOf(newMessageLogPath), true);
 
-        if (resultOfFileCreation == 0) {
-            writer.append("\n");
+            if (resultOfFileCreation == 0) {
+                writer.append("\n");
+            }
+
+            if (groupChat) {
+                writer.append(groupName);
+            } else {
+                writer.append(userName);
+            }
+
+            writer.append(finalClass.CSV_DELIMITER);
+            writer.append(timeStamp);
+
+            if (groupChat) {
+                writer.append(finalClass.CSV_DELIMITER);
+                writer.append("G");
+            }
+
+            writer.close();
         }
-
-        writer.append(userName);
-        writer.append(delimiter);
-        writer.append(timeStamp);
-        writer.close();
     }
 
     private String createTimeStamp() {
@@ -98,7 +136,7 @@ class MessagingUtilities {
 
     private List<String> getNewMessagesLog(String userName) throws IOException {
         MessengerUtilities messUtil = new MessengerUtilities();
-        Path newMessageLogPath = Paths.get(userName + newMessageLogSuffix);
+        Path newMessageLogPath = Paths.get(userName + finalClass.NEW_MESSAGE_LOG_SUFFIX);
         int resultOfFileCreation = messUtil.createTextFileIfNotCreated(newMessageLogPath);
         return Files.readAllLines(Paths.get(String.valueOf(newMessageLogPath)));
     }
@@ -121,15 +159,17 @@ class MessagingUtilities {
         return newMessagesBySender;
     }
 
-    void checkMessages(User user, Map<String, String> userList, String delimiter) throws IOException, ParseException {
-        String answer = "", answer2, onlyPersonWhoSentMessage = "";
+    void checkMessages(User user, Map<String, String> userList) throws IOException, ParseException {
+        String answer = "", answer2, onlyPersonWhoSentMessage = "", groupIdentifier = "", userMessageFilePath;
         MessengerUtilities messUtil = new MessengerUtilities();
         MessagingUtilities messagingUtilities = new MessagingUtilities();
         Scanner scanner = new Scanner(System.in);
         String numberOfMessagesSuffix;
 
         List<String> newMessagesLogList = messagingUtilities.getNewMessagesLog(user.getUserName());
-        Map<String, Integer> newMessagesBySender = messagingUtilities.countNumberOfNewMessages(newMessagesLogList, delimiter);
+
+        //Get a list of new messages by sender followed by the amount of new messages sent from them
+        Map<String, Integer> newMessagesBySender = messagingUtilities.countNumberOfNewMessages(newMessagesLogList, finalClass.CSV_DELIMITER);
 
         if (newMessagesBySender.size() > 0) {
             System.out.println("\nYou have new message(s) from:");
@@ -139,7 +179,11 @@ class MessagingUtilities {
                 } else {
                     numberOfMessagesSuffix = "";
                 }
-                System.out.println(entry.getKey() + " (" + entry.getValue() + " message" + numberOfMessagesSuffix + ")");
+
+                groupIdentifier = "";
+                if (entry.getKey().contains("-")) groupIdentifier = "Group";
+
+                System.out.println(entry.getKey() + " (" + entry.getValue() + " message" + numberOfMessagesSuffix + ") " + groupIdentifier);
 
                 if (newMessagesBySender.size() == 1 && onlyPersonWhoSentMessage.equals("")) {
                     onlyPersonWhoSentMessage = entry.getKey();
@@ -170,30 +214,46 @@ class MessagingUtilities {
             String timeStampPattern = "yyyy-MM-dd HH:mm:ss.SSS";
 
             //Determine the time of the first unread message by chosen sender
-            String firstUnreadMessage = messagingUtilities.getEarliestUnreadMessageTime(answer, newMessagesLogList, delimiter);
+            String firstUnreadMessage = messagingUtilities.getEarliestUnreadMessageTime(answer, newMessagesLogList);
             Date date2 = new SimpleDateFormat(timeStampPattern).parse(firstUnreadMessage);
 
-            //Get the path of the current user's message file
-            String userMessageFilePath = messUtil.createMessageTxtFileIfNotCreated(user.getUserName(), answer, "-", ".txt");
+            ArrayList<String> groupName = new ArrayList<>();
+            groupName.add(answer);
+
+            if (!groupIdentifier.equals("")) {
+                //Get the path of the current group's message file
+                userMessageFilePath = messUtil.searchForFileNameContainingSubstring(groupName, user.getUserName(), true);
+            } else {
+                //Get the path of the current user's message file
+                userMessageFilePath = messUtil.createMessageTxtFileIfNotCreated(user.getUserName(), answer, ".txt");
+            }
 
             //Find the messages and print them out one after another
             fetchNewMessages(date2, userMessageFilePath, timeStampPattern);
 
             //Remove current sender's logs from user's NewMessageLog, because the messages have now been read
-            removeSendersLinesFromNewMessageLog(answer, Paths.get(user.getUserName() + newMessageLogSuffix), delimiter);
+            removeSendersLinesFromNewMessageLog(answer, Paths.get(user.getUserName() + finalClass.NEW_MESSAGE_LOG_SUFFIX));
 
             System.out.println("\nWould you like to reply? (Y/N)");
             answer2 = scanner.next();
 
             if (answer2.equalsIgnoreCase("Y")) {
-                composeMessage(user.getUserName(), userList, delimiter, answer);
+                if (!groupIdentifier.equals("")) {
+                    //Compose a reply for a group
+                    composeMessage(user.getUserName(), userList, groupName, true, true);
+                } else {
+                    //Compose a reply for a single user
+                    ArrayList<String> tempRecipient = new ArrayList<>();
+                    tempRecipient.add(answer);
+                    composeMessage(user.getUserName(), userList, tempRecipient, false, true);
+                }
             }
         } else {
             System.out.println("\nYou don't have any new messages!");
         }
     }
 
-    private void removeSendersLinesFromNewMessageLog(String sender, Path newMessageLogPath, String delimiter) throws IOException {
+    private void removeSendersLinesFromNewMessageLog(String sender, Path newMessageLogPath) throws IOException {
         File inputFile = new File(String.valueOf(newMessageLogPath));
         File tempFile = new File("temp" + newMessageLogPath);
 
@@ -204,7 +264,7 @@ class MessagingUtilities {
         String[] splitLines;
 
         while ((currentLine = reader.readLine()) != null) {
-            splitLines = currentLine.split(delimiter);
+            splitLines = currentLine.split(finalClass.CSV_DELIMITER);
             //Rewrite all lines that don't contain the sender's name
             if (!splitLines[0].equals(sender)) {
                 writer.write(currentLine);
@@ -245,9 +305,9 @@ class MessagingUtilities {
         }
     }
 
-    private String getEarliestUnreadMessageTime(String sender, List<String> newMessageLogList, String delimiter) {
+    private String getEarliestUnreadMessageTime(String sender, List<String> newMessageLogList) {
         for (String line : newMessageLogList) {
-            String[] splitLine = line.split(delimiter);
+            String[] splitLine = line.split(finalClass.CSV_DELIMITER);
 
             if (splitLine[0].equals(sender)) {
                 return splitLine[1];

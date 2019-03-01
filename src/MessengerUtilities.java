@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 class MessengerUtilities {
+    FinalClass finalClass = new FinalClass();
 
     boolean checkForKey(Map<String, String> userList, String nameToCheck) {
         if (userList.containsKey(nameToCheck)) return true;
@@ -30,13 +31,32 @@ class MessengerUtilities {
         return 0;
     }
 
-    String searchForFileNameContainingSubstring(ArrayList<String> recipients) {
-        File file = new File("");
-        boolean foundAllSubstrings = true;
+    String searchForFileNameContainingSubstring(ArrayList<String> recipients, String userName, boolean groupNameExists) throws IOException {
+        //Create the file name to use if file hasn't been created
+        String fileNameToUse = "", delimiter = "-", suffix = ".txt";
 
-        if (file.exists() && file.isDirectory()) {
-            String[] files = file.list(); //get the files in String format.
+        if (!groupNameExists) {
+            for (String recipient : recipients) {
+                if (fileNameToUse.equals("")) {
+                    fileNameToUse = recipient;
+                } else {
+                    fileNameToUse = fileNameToUse + delimiter + recipient;
+                }
+            }
+
+            fileNameToUse = userName + delimiter + fileNameToUse + suffix;
+        } else {
+            fileNameToUse = recipients.get(0) + suffix;
+        }
+
+        //Search for it, if not found create it
+        File file1 = new File("C://Users/sander/Downloads/JavaVirtualMessenger/");
+        boolean foundAllSubstrings = false;
+
+        if (file1.isDirectory()) {
+            String[] files = file1.list();
             for (String fileName : files) {
+                foundAllSubstrings = true;
                 for (String element: recipients) {
                     if (!fileName.contains(element)) {
                         foundAllSubstrings = false;
@@ -44,17 +64,26 @@ class MessengerUtilities {
                     }
                 }
 
-                if (foundAllSubstrings) {
+                if (foundAllSubstrings && fileName.contains(userName) && fileName.length() == fileNameToUse.length()) {
+                    if (!groupNameExists) System.out.println("Group " + fileName.replace(".txt", "") + " already exists!");
                     return fileName;
                 }
             }
         }
-        return "";
+
+        if (!foundAllSubstrings) {
+            File file3 = new File("C://Users/sander/Downloads/JavaVirtualMessenger/" + fileNameToUse);
+            file3.createNewFile();
+            System.out.println("Group " + String.valueOf(file3.getName()).replace(".txt", "") + " has been created!");
+            return file3.getName();
+        } else {
+            return "";
+        }
     }
 
-    String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck, String delimiter, String suffix) throws IOException {
-        File file1 = new File(stringToCheck + delimiter + anotherStringToCheck + suffix);
-        File file2 = new File(anotherStringToCheck + delimiter + stringToCheck + suffix);
+    String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck, String suffix) throws IOException {
+        File file1 = new File(stringToCheck + finalClass.MESSAGE_FILE_NAME_DELIMITER + anotherStringToCheck + suffix);
+        File file2 = new File(anotherStringToCheck + finalClass.MESSAGE_FILE_NAME_DELIMITER + stringToCheck + suffix);
 
         if (!file1.exists() && !file2.exists()) {
             file1.createNewFile();
@@ -73,22 +102,22 @@ class MessengerUtilities {
         writer.close();
     }
 
-    Map<String, String> readFromCsvIntoMap(Path filepath, String delimiter) throws IOException {
+    Map<String, String> readFromCsvIntoMap() throws IOException {
         Map<String, String> map = new HashMap<>();
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(filepath)));
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(finalClass.USER_LIST_PATH)));
         String line;
         line = bufferedReader.readLine();
         String[] splitLines;
 
         while ((line = bufferedReader.readLine()) != null) {
-            splitLines = line.split(delimiter);
+            splitLines = line.split(finalClass.CSV_DELIMITER);
             map.put(splitLines[0], splitLines[1]);
         }
         bufferedReader.close();
         return map;
     }
 
-    User registerNewUser(Map<String, String> userList, String csvDelimiter, Path userListPath) throws IOException {
+    User registerNewUser(Map<String, String> userList) throws IOException {
         String enteredUserName;
         String enteredPassword;
         MessengerUtilities messUtil = new MessengerUtilities();
@@ -117,7 +146,7 @@ class MessengerUtilities {
         }
 
         //Save the new username into user list
-        messUtil.appendUserNamePswToCSV(enteredUserName + csvDelimiter + enteredPassword, userListPath);
+        messUtil.appendUserNamePswToCSV(enteredUserName + finalClass.CSV_DELIMITER + enteredPassword, finalClass.USER_LIST_PATH);
 
         System.out.println("New user successfully created.\nWelcome to JVM, " + enteredUserName + "!");
 
