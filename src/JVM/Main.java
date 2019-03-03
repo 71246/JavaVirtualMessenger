@@ -6,21 +6,22 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 
+import static JVM.CommonMethods.*;
+
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
-        FinalClass finalClass = new FinalClass();
         String answer;
         Map<String, String> userList;
-        MessengerUtilities messUtil = new MessengerUtilities();
-        MessagingUtilities messagingUtilities = new MessagingUtilities();
+        PrivateMessaging privateMessaging = new PrivateMessaging();
+        GroupMessaging groupMessaging = new GroupMessaging();
         Scanner scanner = new Scanner(System.in);
 
         //Create the user list file if it doesn't yet exist
-        int resultOfFileCreation = messUtil.createTextFileIfNotCreated(finalClass.USER_LIST_PATH);
+        int resultOfFileCreation = createTextFileIfNotCreated(FinalClass.USER_LIST_PATH);
 
         //Map the user list
-        userList = messUtil.readFromCsvIntoMap();
+        userList = readFromCsvIntoMap();
 
         //Welcome the user and provide initial options
         System.out.println("Welcome to Java Virtual Messenger!\n" + "Please register or log in. (REG/LOGIN)");
@@ -33,19 +34,17 @@ public class Main {
         while (true) {
             if (answer.equalsIgnoreCase("REG")) {
                 //Registering process
-                user = messUtil.registerNewUser(userList);
+                user = privateMessaging.registerNewUser(userList);
                 break;
             } else if (answer.equalsIgnoreCase("LOGIN")) {
                 //Log in process
-                user = messUtil.logInUser(userList);
+                user = logInUser(userList);
                 break;
             } else {
                 System.out.println("Unknown command. Please try again!");
                 answer = scanner.nextLine();
             }
         }
-
-        ArrayList<String> recipients = new ArrayList<>();
 
         //Messaging processes
         while (true) {
@@ -56,14 +55,14 @@ public class Main {
                 System.out.println("Do you wish to start a group chat? (Y/N)");
                 answer = scanner.nextLine();
 
-                boolean groupChat = false;
+                if (answer.equalsIgnoreCase("Y")) {
+                    groupMessaging.chooseRecipients(user.getUserName(), userList);
+                } else {
+                    privateMessaging.chooseRecipient(user.getUserName(), userList);
+                }
 
-                if (answer.equalsIgnoreCase("Y"))
-                    groupChat = true;
-
-                messagingUtilities.composeMessage(user.getUserName(), userList, recipients, groupChat, false);
             } else if (answer.equalsIgnoreCase("CHECK")) {
-                messagingUtilities.checkMessages(user, userList);
+                privateMessaging.checkMessages(user, userList);
             } else if (answer.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("\nGoodbye, " + user.getUserName() + "!");
                 System.exit(0);
