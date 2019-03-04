@@ -11,6 +11,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
         String answer;
+        int answerInt;
         Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
 
@@ -45,7 +46,7 @@ public class Main {
 
         //Messaging processes
         while (true) {
-            System.out.println("\nDo you wish to send a message, check new messages or log out? (SEND/CHECK/LOGOUT)");
+            System.out.println("\nWhat do you wish to do? (SEND/CHECK/CHAT/SETTINGS/LOGOUT)");
             answer = scanner.nextLine();
 
             if (answer.equalsIgnoreCase("SEND")) {
@@ -59,6 +60,20 @@ public class Main {
                 }
             } else if (answer.equalsIgnoreCase("CHECK")) {
                 checkMessages(user);
+            } else if (answer.equalsIgnoreCase("CHAT")) {
+                user.collectConversations();
+                user.printConversations();
+
+                System.out.println("Choose a conversation by its number.");
+                answerInt = scanner.nextInt();
+
+                if ((answerInt > 0) && answerInt <= user.getConversations().size()) {
+
+                } else {
+                    System.out.println("Unknown command.");
+                }
+            } else if (answer.equalsIgnoreCase("SETTINGS")) {
+                System.out.println("Feature under construction :)");
             } else if (answer.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("\nGoodbye, " + user.getUserName() + "!");
                 break;

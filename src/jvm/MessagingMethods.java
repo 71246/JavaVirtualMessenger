@@ -285,6 +285,29 @@ class MessagingMethods {
         }
     }
 
+    private static void fetchRecentMessages(Date firstUnreadMessage, String filePath) throws IOException, ParseException {
+        List<String> lines = Files.readAllLines(Paths.get(filePath));
+
+        //Start from the last message and count backwards until the specified number of messages to show is reached
+        for (int i = lines.size() - 1; i >= 0; i--) {
+            //Look for "<timestamp>" tag
+            if (lines.get(i).contains(FinalClass.TIME_STAMP_TAG)) {
+                //Parse the timestamp into a Date
+                Date dateOfCurrentMessage = new SimpleDateFormat(FinalClass.TIME_STAMP_PATTERN).parse(lines.get(i).replace(FinalClass.TIME_STAMP_TAG, ""));
+                //Check if the parsed Date is earlier than firstUnreadMessage
+                if (dateOfCurrentMessage.compareTo(firstUnreadMessage) == 0) {
+                    //Print out all remaining lines, except the lines where timestamp tag is present
+                    for (int c = i; c < lines.size(); c++) {
+                        if (!lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
+                            System.out.println(lines.get(c));
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     private static void removeSendersLinesFromNewMessageLog(String sender, Path newMessageLogPath) throws IOException {
         List<String> fileContents = Files.readAllLines(newMessageLogPath);
         List<String> newContent = new ArrayList<>();
@@ -514,4 +537,6 @@ class MessagingMethods {
             return "";
         }
     }
+
+
 }
