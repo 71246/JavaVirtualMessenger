@@ -10,7 +10,8 @@ class User {
     private String password;
     private ArrayList<String> friendsList = new ArrayList<>();
     private Map<Integer, String> conversations = new HashMap<>();
-    private int amountOfMessagesToShow;
+    private String currentConversation = "";
+    private int amountOfMessagesToShow = 10;
 
     User(String userName, String password) {
         this.userName = userName;
@@ -53,7 +54,7 @@ class User {
     }
 
     void printConversations() {
-        if (this.conversations.size() > 1) {
+        if (this.conversations.size() >= 1) {
             System.out.println("\nHere are your ongoing chats:");
 
             for (Map.Entry<Integer, String> conversation : this.conversations.entrySet()) {
@@ -70,5 +71,13 @@ class User {
 
     public void setAmountOfMessagesToShow(int amountOfMessagesToShow) {
         this.amountOfMessagesToShow = amountOfMessagesToShow;
+    }
+
+    public String getCurrentConversation() {
+        return currentConversation;
+    }
+
+    public void setCurrentConversation(String currentConversation) {
+        this.currentConversation = currentConversation;
     }
 }

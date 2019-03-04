@@ -8,7 +8,20 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-class MessagingMethods {
+class MessagingMethods implements Runnable  {
+
+    @Override
+    public void run() {
+
+    }
+
+    void checkNewMessages(User user) throws IOException, ParseException {
+        checkMessages2(user);
+    }
+
+    void sendMessages(User user) throws IOException {
+        chat(user);
+    }
 
     static void chooseRecipient(String userName, Map<String, String> userList) throws IOException {
         String recipient;
@@ -29,7 +42,7 @@ class MessagingMethods {
 
         //Check if the message file exists, if not then create it
         messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipient));
-        composeMessage(userName, "", recipient, null, messagesPath);
+        composeMessage(userName, "", recipient, null, messagesPath, "");
     }
 
     static void chooseRecipients(String userName, Map<String, String> userList) throws IOException {
@@ -55,7 +68,7 @@ class MessagingMethods {
         if (recipients.size() == 1) {
             //Check if the message file exists, if not then create it
             messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipients.get(0)));
-            composeMessage(userName, "", recipients.get(0), null, messagesPath);
+            composeMessage(userName, "", recipients.get(0), null, messagesPath, "");
         } else {
             //Get the file path, or create it
             messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, userName, ""));
@@ -63,7 +76,7 @@ class MessagingMethods {
             //Extract group name from the message file path
             groupName = String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, "");
 
-            composeMessage(userName, groupName, "", recipients, messagesPath);
+            composeMessage(userName, groupName, "", recipients, messagesPath, "");
         }
     }
 
@@ -285,26 +298,79 @@ class MessagingMethods {
         }
     }
 
-    private static void fetchRecentMessages(Date firstUnreadMessage, String filePath) throws IOException, ParseException {
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
+    private static void fetchRecentMessages(String senders, Integer numberOfMessagesToLoad) throws IOException {
+        String filename = senders + FinalClass.FILE_TYPE_SUFFIX;
+        List<String> lines = Files.readAllLines(Paths.get(filename));
+        int messageCounter = 0, numberOfMessages = 0;
 
-        //Start from the last message and count backwards until the specified number of messages to show is reached
-        for (int i = lines.size() - 1; i >= 0; i--) {
-            //Look for "<timestamp>" tag
-            if (lines.get(i).contains(FinalClass.TIME_STAMP_TAG)) {
-                //Parse the timestamp into a Date
-                Date dateOfCurrentMessage = new SimpleDateFormat(FinalClass.TIME_STAMP_PATTERN).parse(lines.get(i).replace(FinalClass.TIME_STAMP_TAG, ""));
-                //Check if the parsed Date is earlier than firstUnreadMessage
-                if (dateOfCurrentMessage.compareTo(firstUnreadMessage) == 0) {
-                    //Print out all remaining lines, except the lines where timestamp tag is present
-                    for (int c = i; c < lines.size(); c++) {
-                        if (!lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
-                            System.out.println(lines.get(c));
+        //Count number of messages
+        for (String line: lines) {
+            if (line.contains(FinalClass.TIME_STAMP_TAG)) numberOfMessages++;
+        }
+
+        //Count backwards the amount of messages to load or print all messages if there's less messages in the file
+        if (numberOfMessagesToLoad <= numberOfMessages) {
+            //Start from the last message and count backwards until the specified number of messages to show is reached
+            for (int i = lines.size() - 1; i >= 0; i--) {
+                if (lines.get(i).contains(FinalClass.TIME_STAMP_TAG)) {
+                    messageCounter++;
+                    if (messageCounter == numberOfMessagesToLoad) {
+                        for (int c = i; c < lines.size(); c++) {
+                            if (!lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
+                                System.out.println(lines.get(c));
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
+        } else {
+            //Take all messages
+            for (String line : lines) {
+                if (!line.contains(FinalClass.TIME_STAMP_TAG)) {
+                    System.out.println(line);
+                }
+            }
+        }
+    }
+
+    static void chat(User user) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+        int answerInt;
+        String answer, chatName, userMessageFilePath;
+        ArrayList<String> recipients;
+
+        if (user.getConversations().size() != 0) {
+            System.out.println("\nChoose a conversation to continue:");
+            answerInt = scanner.nextInt();
+        } else {
+            return;
+        }
+
+        if (user.getConversations().keySet().contains(answerInt)) {
+            chatName = user.getConversations().get(answerInt);
+            user.setCurrentConversation(chatName);
+            System.out.println("You are in a chat between " + chatName + "\nEnter \"/MENU\" to return to the menu.");
+            long count = chatName.chars().filter(ch -> ch == '-').count();
+
+            fetchRecentMessages(user.getConversations().get(answerInt), user.getAmountOfMessagesToShow());
+
+            do {
+                answer = scanner.nextLine();
+
+                //If group chat or private
+                if (count >= 2) {
+                    userMessageFilePath = searchForFileNameContainingSubstring(null, user.getUserName(), chatName);
+                    recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
+                    composeMessage(user.getUserName(), chatName,  "", recipients, Paths.get(userMessageFilePath), answer);
+                } else {
+                    recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
+                    userMessageFilePath = createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0));
+                    composeMessage(user.getUserName(), "", recipients.get(0), null, Paths.get(userMessageFilePath), answer);
+                }
+            } while (!answer.equalsIgnoreCase("/MENU"));
+        } else {
+            System.out.println("Unknown command.");
         }
     }
 
@@ -331,13 +397,14 @@ class MessagingMethods {
         printWriter.close();
     }
 
-    private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath) throws IOException {
+    private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        String message, answer;
+        //String message, answer;
+        String answer;
 
-        do {
-            System.out.println("\nPlease enter your message:");
-            message = scanner.nextLine();
+        //do {
+            //System.out.println("\nPlease enter your message:");
+            //message = scanner.nextLine();
 
             String currentTimeStamp = createTimeStamp();
             saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
@@ -348,9 +415,9 @@ class MessagingMethods {
                 saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
             }
 
-            System.out.println("\nDo you want to send another? (Y/N)");
-            answer = scanner.nextLine();
-        } while (answer.equalsIgnoreCase("Y"));
+            //System.out.println("\nDo you want to send another? (Y/N)");
+            //answer = scanner.nextLine();
+        //} while (answer.equalsIgnoreCase("Y"));
     }
 
     private static void saveSenderAndTimeStampToNewMessageLog(String userName, String groupName, String recipient, ArrayList<String> recipients, String timeStamp) throws IOException {
@@ -387,6 +454,31 @@ class MessagingMethods {
             writer.append(timeStamp);
             writer.close();
         }
+    }
+
+    static void checkMessages2(User user) throws IOException, ParseException {
+        String answer = "", onlySender = "", answer2, userMessageFilePath;
+        boolean groupChat = false;
+        Scanner scanner = new Scanner(System.in);
+
+        List<String> newMessagesLogList = getNewMessagesLog(user.getUserName());
+        Map<String, Integer> newMessagesBySender = countNumberOfNewMessages(newMessagesLogList);
+
+        if (user.getCurrentConversation().contains(FinalClass.MESSAGE_FILE_NAME_DELIMITER)) groupChat = true;
+
+        String firstUnreadMessage = getEarliestUnreadMessageTime(answer, newMessagesLogList);
+        Date date2 = new SimpleDateFormat(FinalClass.TIME_STAMP_PATTERN).parse(firstUnreadMessage);
+
+        if (groupChat) {
+            userMessageFilePath = searchForFileNameContainingSubstring(null, user.getUserName(), answer);
+        } else {
+            userMessageFilePath = createMessageTxtFileIfNotCreated(user.getUserName(), answer);
+        }
+
+        fetchNewMessages(date2, userMessageFilePath);
+
+        //Remove current sender's logs from user's NewMessageLog, because the messages have now been read
+        removeSendersLinesFromNewMessageLog(answer, Paths.get(user.getUserName() + FinalClass.NEW_MESSAGE_LOG_SUFFIX));
     }
 
     static void checkMessages(User user) throws IOException, ParseException {
@@ -455,9 +547,9 @@ class MessagingMethods {
                 if (groupChat) {
                     //Split groupName to separate pieces, remove userName to get recipients array
                     ArrayList<String> recipients = splitStringByDelimiterIntoArrayList(answer, user.getUserName());
-                    composeMessage(user.getUserName(), answer,  "", recipients, Paths.get(userMessageFilePath));
+                    composeMessage(user.getUserName(), answer,  "", recipients, Paths.get(userMessageFilePath), "");
                 } else {
-                    composeMessage(user.getUserName(), answer, answer, null, Paths.get(userMessageFilePath));
+                    composeMessage(user.getUserName(), answer, answer, null, Paths.get(userMessageFilePath), "");
                 }
             }
         } else {
@@ -537,6 +629,4 @@ class MessagingMethods {
             return "";
         }
     }
-
-
 }

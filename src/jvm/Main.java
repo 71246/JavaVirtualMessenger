@@ -11,7 +11,6 @@ public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
         String answer;
-        int answerInt;
         Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
 
@@ -26,7 +25,7 @@ public class Main {
         answer = scanner.nextLine();
 
         //Initialize jvm.User class
-        User user;
+        jvm.User user;
 
         //Registering and logging in
         while (true) {
@@ -64,14 +63,15 @@ public class Main {
                 user.collectConversations();
                 user.printConversations();
 
-                System.out.println("Choose a conversation by its number.");
-                answerInt = scanner.nextInt();
+                MessagingMethods r = new MessagingMethods();
+                new Thread(r).start();
+                r.checkNewMessages(user);
 
-                if ((answerInt > 0) && answerInt <= user.getConversations().size()) {
+                MessagingMethods s = new MessagingMethods();
+                new Thread(s).start();
+                s.sendMessages(user);
 
-                } else {
-                    System.out.println("Unknown command.");
-                }
+                //chat(user);
             } else if (answer.equalsIgnoreCase("SETTINGS")) {
                 System.out.println("Feature under construction :)");
             } else if (answer.equalsIgnoreCase("LOGOUT")) {
