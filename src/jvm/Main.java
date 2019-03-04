@@ -1,20 +1,17 @@
-package JVM;
+package jvm;
 
 import java.io.*;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
 
-import static JVM.CommonMethods.*;
+import static jvm.MessagingMethods.*;
 
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
         String answer;
         Map<String, String> userList;
-        PrivateMessaging privateMessaging = new PrivateMessaging();
-        GroupMessaging groupMessaging = new GroupMessaging();
         Scanner scanner = new Scanner(System.in);
 
         //Create the user list file if it doesn't yet exist
@@ -27,14 +24,14 @@ public class Main {
         System.out.println("Welcome to Java Virtual Messenger!\n" + "Please register or log in. (REG/LOGIN)");
         answer = scanner.nextLine();
 
-        //Initialize JVM.User class
+        //Initialize jvm.User class
         User user;
 
         //Registering and logging in
         while (true) {
             if (answer.equalsIgnoreCase("REG")) {
                 //Registering process
-                user = privateMessaging.registerNewUser(userList);
+                user = registerNewUser(userList);
                 break;
             } else if (answer.equalsIgnoreCase("LOGIN")) {
                 //Log in process
@@ -56,16 +53,14 @@ public class Main {
                 answer = scanner.nextLine();
 
                 if (answer.equalsIgnoreCase("Y")) {
-                    groupMessaging.chooseRecipients(user.getUserName(), userList);
+                    chooseRecipients(user.getUserName(), userList);
                 } else {
-                    privateMessaging.chooseRecipient(user.getUserName(), userList);
+                    chooseRecipient(user.getUserName(), userList);
                 }
-
             } else if (answer.equalsIgnoreCase("CHECK")) {
-                privateMessaging.checkMessages(user, userList);
+                checkMessages(user);
             } else if (answer.equalsIgnoreCase("LOGOUT")) {
                 System.out.println("\nGoodbye, " + user.getUserName() + "!");
-                System.exit(0);
                 break;
             } else {
                 System.out.println("Unknown command. Please try again!");
