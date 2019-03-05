@@ -42,7 +42,7 @@ class MessagingMethods implements Runnable  {
 
         //Check if the message file exists, if not then create it
         messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipient));
-        composeMessage(userName, "", recipient, null, messagesPath, "");
+        composeMessage(userName, "", recipient, null, messagesPath, "", false);
     }
 
     static void chooseRecipients(String userName, Map<String, String> userList) throws IOException {
@@ -68,7 +68,7 @@ class MessagingMethods implements Runnable  {
         if (recipients.size() == 1) {
             //Check if the message file exists, if not then create it
             messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipients.get(0)));
-            composeMessage(userName, "", recipients.get(0), null, messagesPath, "");
+            composeMessage(userName, "", recipients.get(0), null, messagesPath, "", false);
         } else {
             //Get the file path, or create it
             messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, userName, ""));
@@ -76,7 +76,7 @@ class MessagingMethods implements Runnable  {
             //Extract group name from the message file path
             groupName = String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, "");
 
-            composeMessage(userName, groupName, "", recipients, messagesPath, "");
+            composeMessage(userName, groupName, "", recipients, messagesPath, "", false);
         }
     }
 
@@ -362,11 +362,11 @@ class MessagingMethods implements Runnable  {
                 if (count >= 2) {
                     userMessageFilePath = searchForFileNameContainingSubstring(null, user.getUserName(), chatName);
                     recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
-                    composeMessage(user.getUserName(), chatName,  "", recipients, Paths.get(userMessageFilePath), answer);
+                    composeMessage(user.getUserName(), chatName,  "", recipients, Paths.get(userMessageFilePath), answer, true);
                 } else {
                     recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
                     userMessageFilePath = createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0));
-                    composeMessage(user.getUserName(), "", recipients.get(0), null, Paths.get(userMessageFilePath), answer);
+                    composeMessage(user.getUserName(), "", recipients.get(0), null, Paths.get(userMessageFilePath), answer, true);
                 }
             } while (!answer.equalsIgnoreCase("/MENU"));
         } else {
@@ -397,14 +397,14 @@ class MessagingMethods implements Runnable  {
         printWriter.close();
     }
 
-    private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message) throws IOException {
-        Scanner scanner = new Scanner(System.in);
-        //String message, answer;
-        String answer;
+    private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message, boolean instantMessage) throws IOException {
+        if (!instantMessage) {
+            Scanner scanner = new Scanner(System.in);
+            String answer;
 
-        //do {
-            //System.out.println("\nPlease enter your message:");
-            //message = scanner.nextLine();
+            do {
+            System.out.println("\nPlease enter your message:");
+            message = scanner.nextLine();
 
             String currentTimeStamp = createTimeStamp();
             saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
@@ -415,9 +415,19 @@ class MessagingMethods implements Runnable  {
                 saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
             }
 
-            //System.out.println("\nDo you want to send another? (Y/N)");
-            //answer = scanner.nextLine();
-        //} while (answer.equalsIgnoreCase("Y"));
+            System.out.println("\nDo you want to send another? (Y/N)");
+            answer = scanner.nextLine();
+            } while (answer.equalsIgnoreCase("Y"));
+        } else {
+            String currentTimeStamp = createTimeStamp();
+            saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
+
+            if (groupName.equals("")) {
+                saveSenderAndTimeStampToNewMessageLog(userName, "", recipient, null, currentTimeStamp);
+            } else {
+                saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
+            }
+        }
     }
 
     private static void saveSenderAndTimeStampToNewMessageLog(String userName, String groupName, String recipient, ArrayList<String> recipients, String timeStamp) throws IOException {
@@ -547,9 +557,9 @@ class MessagingMethods implements Runnable  {
                 if (groupChat) {
                     //Split groupName to separate pieces, remove userName to get recipients array
                     ArrayList<String> recipients = splitStringByDelimiterIntoArrayList(answer, user.getUserName());
-                    composeMessage(user.getUserName(), answer,  "", recipients, Paths.get(userMessageFilePath), "");
+                    composeMessage(user.getUserName(), answer,  "", recipients, Paths.get(userMessageFilePath), "", false);
                 } else {
-                    composeMessage(user.getUserName(), answer, answer, null, Paths.get(userMessageFilePath), "");
+                    composeMessage(user.getUserName(), answer, answer, null, Paths.get(userMessageFilePath), "", false);
                 }
             }
         } else {

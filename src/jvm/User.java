@@ -65,7 +65,7 @@ class User {
         }
     }
 
-    public int getAmountOfMessagesToShow() {
+    int getAmountOfMessagesToShow() {
         return amountOfMessagesToShow;
     }
 
@@ -73,11 +73,11 @@ class User {
         this.amountOfMessagesToShow = amountOfMessagesToShow;
     }
 
-    public String getCurrentConversation() {
+    String getCurrentConversation() {
         return currentConversation;
     }
 
-    public void setCurrentConversation(String currentConversation) {
+    void setCurrentConversation(String currentConversation) {
         this.currentConversation = currentConversation;
     }
 }
