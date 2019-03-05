@@ -176,7 +176,7 @@ class MessagingMethods {
         return sdfDate.format(now);
     }
 
-    static List<String> getNewMessagesLog(String userName) throws IOException {
+    private static List<String> getNewMessagesLog(String userName) throws IOException {
         Path newMessageLogPath = Paths.get(userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX);
         int resultOfFileCreation = createTextFileIfNotCreated(newMessageLogPath);
         return Files.readAllLines(Paths.get(String.valueOf(newMessageLogPath)));
@@ -211,7 +211,7 @@ class MessagingMethods {
                 numberOfMessagesSuffix = "";
             }
 
-            if (entry.getKey().contains(FinalClass.MESSAGE_FILE_NAME_DELIMITER)) groupIdentifier = "Group chat";
+            if (entry.getKey().contains(FinalClass.FILE_NAME_DELIMITER_DASH)) groupIdentifier = "Group chat";
 
             System.out.println(entry.getKey() + " (" + entry.getValue() + " message" + numberOfMessagesSuffix + ") " + groupIdentifier);
         }
@@ -347,23 +347,20 @@ class MessagingMethods {
             OngoingMessagesThread r = new OngoingMessagesThread(user, user.getCurrentConversation(), chatName + FinalClass.FILE_TYPE_SUFFIX);
             r.start();
 
+            //Check for new messages from other users
             OtherMessagesThread s = new OtherMessagesThread(user, chatName);
             s.start();
-            /*
-            InstantMessaging t1 = new InstantMessaging();
-            new Thread(t1).start();
-            t1.checkIncomingOngoingChatMessages(user, chatName, chatName + FinalClass.FILE_TYPE_SUFFIX);*/
 
             do {
                 answer = scanner.nextLine();
                 if (!answer.equals("") && !answer.equalsIgnoreCase("/MENU")) {
+                    recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
+
                     //If group chat or private
                     if (count >= 2) {
                         userMessageFilePath = searchForFileNameContainingSubstring(null, user.getUserName(), chatName);
-                        recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
                         composeMessage(user.getUserName(), chatName, "", recipients, Paths.get(userMessageFilePath), answer, true);
                     } else {
-                        recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
                         userMessageFilePath = createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0));
                         composeMessage(user.getUserName(), "", recipients.get(0), null, Paths.get(userMessageFilePath), answer, true);
                     }
@@ -506,7 +503,7 @@ class MessagingMethods {
                 }
             }
 
-            if (answer.contains(FinalClass.MESSAGE_FILE_NAME_DELIMITER)) groupChat = true;
+            if (answer.contains(FinalClass.FILE_NAME_DELIMITER_DASH)) groupChat = true;
 
             //Determine the time of the first unread message by chosen sender
             String firstUnreadMessage = getEarliestUnreadMessageTime(answer, newMessagesLogList);
@@ -544,15 +541,15 @@ class MessagingMethods {
     }
 
     private static ArrayList<String> splitStringByDelimiterIntoArrayList(String stringToSplit, String userName) {
-        String[] splitString = stringToSplit.split(FinalClass.MESSAGE_FILE_NAME_DELIMITER);
+        String[] splitString = stringToSplit.split(FinalClass.FILE_NAME_DELIMITER_DASH);
         ArrayList<String> result = new ArrayList<>(Arrays.asList(splitString));
         result.remove(userName);
         return result;
     }
 
     synchronized private static String createMessageTxtFileIfNotCreated(String stringToCheck, String anotherStringToCheck) throws IOException {
-        File file1 = new File(stringToCheck + FinalClass.MESSAGE_FILE_NAME_DELIMITER + anotherStringToCheck + FinalClass.FILE_TYPE_SUFFIX);
-        File file2 = new File(anotherStringToCheck + FinalClass.MESSAGE_FILE_NAME_DELIMITER + stringToCheck + FinalClass.FILE_TYPE_SUFFIX);
+        File file1 = new File(stringToCheck + FinalClass.FILE_NAME_DELIMITER_DASH + anotherStringToCheck + FinalClass.FILE_TYPE_SUFFIX);
+        File file2 = new File(anotherStringToCheck + FinalClass.FILE_NAME_DELIMITER_DASH + stringToCheck + FinalClass.FILE_TYPE_SUFFIX);
 
         if (!file1.exists() && !file2.exists()) {
             file1.createNewFile();
@@ -573,11 +570,11 @@ class MessagingMethods {
                 if (fileNameToCheckAgainst.equals("")) {
                     fileNameToCheckAgainst = recipient;
                 } else {
-                    fileNameToCheckAgainst = fileNameToCheckAgainst + FinalClass.MESSAGE_FILE_NAME_DELIMITER + recipient;
+                    fileNameToCheckAgainst = fileNameToCheckAgainst + FinalClass.FILE_NAME_DELIMITER_DASH + recipient;
                 }
             }
 
-            fileNameToCheckAgainst = userName + FinalClass.MESSAGE_FILE_NAME_DELIMITER + fileNameToCheckAgainst + FinalClass.FILE_TYPE_SUFFIX;
+            fileNameToCheckAgainst = userName + FinalClass.FILE_NAME_DELIMITER_DASH + fileNameToCheckAgainst + FinalClass.FILE_TYPE_SUFFIX;
         } else {
             //When the groupName already exists
             fileNameToCheckAgainst = groupName + FinalClass.FILE_TYPE_SUFFIX;

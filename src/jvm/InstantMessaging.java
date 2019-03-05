@@ -8,24 +8,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class InstantMessaging implements Runnable {
-
-    @Override
-    public void run() {
-
-    }
+class InstantMessaging {
 
     void checkIncomingOngoingChatMessages(User user, String chatName, String messageFilePath) throws IOException {
-        while (!user.getCurrentConversation().equals("")) {
-            printMatchingMessages(getMessagesForOngoingChat(user, chatName), messageFilePath);
-            removeLinesFromNewMessageLog(chatName, Paths.get(user.getNewMessageLogFileName()));
-        }
+        printMatchingMessages(getMessagesForOngoingChat(user, chatName), messageFilePath);
+        removeLinesFromNewMessageLog(user, chatName, Paths.get(user.getNewMessageLogFileName()));
     }
 
     void checkOtherIncomingMessages(User user, String chatName) throws IOException {
-        while (!user.getCurrentConversation().equals("")) {
-            notifyUserOfIncomingNewMessages(countNumberOfNewMessages(getAllNewMessagesNotFromCurrentChat(user, chatName)));
-        }
+        notifyUserOfIncomingNewMessages(countNumberOfNewMessages(getAllNewMessagesNotFromCurrentChat(user, chatName)));
     }
 
     synchronized private static ArrayList<String> getMessagesForOngoingChat(User user, String chatName) throws IOException {
@@ -52,11 +43,13 @@ public class InstantMessaging implements Runnable {
 
     synchronized private static void printMatchingMessages(ArrayList<String> linesFromSender, String chatName) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(chatName));
+        String[] splitline;
 
         for (String line: linesFromSender) {
             for (int c = lines.size() - 1; c >= 0; c--) {
                 if (lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
-                    if (lines.get(c).replace(FinalClass.TIME_STAMP_TAG, "").equals(line.replace(FinalClass.CSV_DELIMITER, ""))) {
+                    splitline = line.split(FinalClass.CSV_DELIMITER);
+                    if (lines.get(c).replace(FinalClass.TIME_STAMP_TAG, "").equals(splitline[1])) {
                         System.out.println(lines.get(c + 1) + "\n" + lines.get(c + 2));
                     }
                 }
@@ -64,26 +57,39 @@ public class InstantMessaging implements Runnable {
         }
     }
 
-    synchronized private static void removeLinesFromNewMessageLog(String chatName, Path newMessageLogPath) throws IOException {
+    synchronized private static void removeLinesFromNewMessageLog(User user, String chatName, Path newMessageLogPath) throws IOException {
         List<String> fileContents = Files.readAllLines(newMessageLogPath);
         List<String> newContent = new ArrayList<>();
         String[] splitLines;
+        ArrayList<String> namesToCheck = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
+        boolean addToNewContent = true;
 
-        for (String line: fileContents) {
-            splitLines = line.split(FinalClass.CSV_DELIMITER);
-            if (!splitLines[0].equals(chatName)) {
-                newContent.add(line);
+        if (fileContents.size() > 0) {
+            //Include in the newContent ONLY rows which do not contain the users in the current chat
+            for (String line : fileContents) {
+                splitLines = line.split(FinalClass.CSV_DELIMITER);
+
+                for (String name : namesToCheck) {
+                    if (!splitLines[0].contains(name)) {
+                        addToNewContent = false;
+                        break;
+                    }
+                }
+
+                if (addToNewContent) {
+                    newContent.add(line);
+                }
             }
+
+            FileWriter fileWriter = new FileWriter(String.valueOf(newMessageLogPath));
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            for (String line : newContent) {
+                printWriter.write(line + "\n");
+            }
+
+            printWriter.close();
         }
-
-        FileWriter fileWriter = new FileWriter(String.valueOf(newMessageLogPath));
-        PrintWriter printWriter = new PrintWriter(fileWriter);
-
-        for (String line: newContent) {
-            printWriter.write(line);
-        }
-
-        printWriter.close();
     }
 
     synchronized private static List<String> getAllNewMessagesNotFromCurrentChat(User user, String chatName) throws IOException {
@@ -138,7 +144,7 @@ public class InstantMessaging implements Runnable {
     }
 
     private static ArrayList<String> splitStringByDelimiterIntoArrayList(String stringToSplit, String userName) {
-        String[] splitString = stringToSplit.split(FinalClass.MESSAGE_FILE_NAME_DELIMITER);
+        String[] splitString = stringToSplit.split(FinalClass.FILE_NAME_DELIMITER_DASH);
         ArrayList<String> result = new ArrayList<>(Arrays.asList(splitString));
         result.remove(userName);
         return result;

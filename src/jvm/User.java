@@ -11,16 +11,28 @@ class User {
     private String userName;
     private String password;
     private ArrayList<String> friendsList = new ArrayList<>();
+    private String friendsListFileName;
     private Map<Integer, String> conversations = new HashMap<>();
     private String currentConversation = "";
     private int amountOfMessagesToShow = 10;
     private String newMessageLogFileName = "";
+    private int numberOfConversations;
 
     User(String userName, String password) throws IOException {
         this.userName = userName;
         this.password = password;
+        this.friendsListFileName = userName + FinalClass.FRIEND_LIST_SUFFIX;
         setNewMessageLogFileName();
         createNewMessageLogFile();
+
+    }
+
+    private void createFriendListFile() throws IOException {
+        File friendList = new File(getFriendsListFileName());
+
+        if (!friendList.exists()) {
+            friendList.createNewFile();
+        }
     }
 
     String getUserName() {
@@ -35,6 +47,14 @@ class User {
         this.newMessageLogFileName = userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX;;
     }
 
+    public void addToFriendsList(String newFriend) {
+        this.friendsList.add(newFriend);
+    }
+
+    public ArrayList<String> getFriendsList() {
+        return friendsList;
+    }
+
     void collectConversations() {
         File directoryToSearchIn = new File(System.getProperty("user.dir"));
         int conversationCounter = 1;
@@ -47,15 +67,8 @@ class User {
                     conversationCounter++;
                 }
             }
+            numberOfConversations = conversationCounter;
         }
-    }
-
-    public void addToFriendsList(String newFriend) {
-        this.friendsList.add(newFriend);
-    }
-
-    public ArrayList<String> getFriendsList() {
-        return friendsList;
     }
 
     private void addToConversations(Integer queueNumber, String conversationName) {
@@ -100,5 +113,9 @@ class User {
         if (!file.exists()) {
             file.createNewFile();
         }
+    }
+
+    public String getFriendsListFileName() {
+        return friendsListFileName;
     }
 }
