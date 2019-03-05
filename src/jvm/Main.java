@@ -62,16 +62,7 @@ public class Main {
             } else if (answer.equalsIgnoreCase("CHAT")) {
                 user.collectConversations();
                 user.printConversations();
-
-                MessagingMethods r = new MessagingMethods();
-                new Thread(r).start();
-                r.checkNewMessages(user);
-
-                MessagingMethods s = new MessagingMethods();
-                new Thread(s).start();
-                s.sendMessages(user);
-
-                //chat(user);
+                chat(user);
             } else if (answer.equalsIgnoreCase("SETTINGS")) {
                 System.out.println("Feature under construction :)");
             } else if (answer.equalsIgnoreCase("LOGOUT")) {

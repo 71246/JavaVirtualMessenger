@@ -1,6 +1,8 @@
 package jvm;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,14 +14,25 @@ class User {
     private Map<Integer, String> conversations = new HashMap<>();
     private String currentConversation = "";
     private int amountOfMessagesToShow = 10;
+    private String newMessageLogFileName = "";
 
-    User(String userName, String password) {
+    User(String userName, String password) throws IOException {
         this.userName = userName;
         this.password = password;
+        setNewMessageLogFileName();
+        createNewMessageLogFile();
     }
 
     String getUserName() {
         return userName;
+    }
+
+    String getNewMessageLogFileName() {
+        return newMessageLogFileName;
+    }
+
+    private void setNewMessageLogFileName() {
+        this.newMessageLogFileName = userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX;;
     }
 
     void collectConversations() {
@@ -65,7 +78,7 @@ class User {
         }
     }
 
-    public int getAmountOfMessagesToShow() {
+    int getAmountOfMessagesToShow() {
         return amountOfMessagesToShow;
     }
 
@@ -73,11 +86,19 @@ class User {
         this.amountOfMessagesToShow = amountOfMessagesToShow;
     }
 
-    public String getCurrentConversation() {
+    String getCurrentConversation() {
         return currentConversation;
     }
 
-    public void setCurrentConversation(String currentConversation) {
+    void setCurrentConversation(String currentConversation) {
         this.currentConversation = currentConversation;
+    }
+
+    synchronized private void createNewMessageLogFile() throws IOException {
+        File file = new File(this.newMessageLogFileName);
+
+        if (!file.exists()) {
+            file.createNewFile();
+        }
     }
 }
