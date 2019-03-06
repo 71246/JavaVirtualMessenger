@@ -77,6 +77,7 @@ class InstantMessaging {
                 }
 
                 if (addToNewContent) {
+                    System.out.println(line);
                     newContent.add(line);
                 }
             }

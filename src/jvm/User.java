@@ -12,7 +12,7 @@ class User {
     private String password;
     private ArrayList<String> friendsList = new ArrayList<>();
     private String friendsListFileName;
-    private Map<Integer, String> conversations = new HashMap<>();
+    private Map<String, String> conversations = new HashMap<>();
     private String currentConversation = "";
     private int amountOfMessagesToShow = 10;
     private String newMessageLogFileName = "";
@@ -71,10 +71,10 @@ class User {
     }
 
     private void addToConversations(Integer queueNumber, String conversationName) {
-        this.conversations.put(queueNumber, conversationName);
+        this.conversations.put(String.valueOf(queueNumber), conversationName);
     }
 
-    Map<Integer, String> getConversations() {
+    Map<String, String> getConversations() {
         return conversations;
     }
 
@@ -82,7 +82,7 @@ class User {
         if (this.conversations.size() >= 1) {
             System.out.println("\nYOUR CHATS:");
 
-            for (Map.Entry<Integer, String> conversation : this.conversations.entrySet()) {
+            for (Map.Entry<String, String> conversation : this.conversations.entrySet()) {
                 System.out.println(conversation.getKey() + ". " + conversation.getValue());
             }
             System.out.println();

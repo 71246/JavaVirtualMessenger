@@ -10,7 +10,7 @@ import java.util.*;
 
 class MessagingMethods {
 
-    static void chooseRecipient(String userName, Map<String, String> userList) throws IOException {
+    static void chooseRecipient(User user, Map<String, String> userList) throws IOException, ParseException {
         String recipient;
         Path messagesPath;
         Scanner scanner = new Scanner(System.in);
@@ -28,42 +28,71 @@ class MessagingMethods {
         }
 
         //Check if the message file exists, if not then create it
-        messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipient));
-        composeMessage(userName, "", recipient, null, messagesPath, "", false);
+        messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipient));
+        user.collectConversations();
+
+        chat(user, findChatNumber(user.getConversations(), recipient, null));
+        //composeMessage(userName, "", recipient, null, messagesPath, "", true);
     }
 
-    static void chooseRecipients(String userName, Map<String, String> userList) throws IOException {
+    private static String findChatNumber(Map<String, String> listOfConversations, String recipient, ArrayList<String> recipients) {
+        boolean found = true;
+
+        if (!recipient.equals("")) {
+            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+                if (entry.getValue().contains(recipient)) {
+                    return entry.getKey();
+                }
+            }
+        } else {
+            for (String user: recipients) {
+                for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+                    if (!entry.getValue().contains(user)) {
+                        found = false;
+                        break;
+                    }
+                }
+                
+            }
+        }
+        return "";
+    }
+
+    static void chooseRecipients(User user, Map<String, String> userList) throws IOException {
         String participant, groupName;
         ArrayList<String> recipients = new ArrayList<>();
         Path messagesPath;
         Scanner scanner = new Scanner(System.in);
 
         //Select group chat participants
-        System.out.println("Please enter all the participants of the group chat one by one: (type " + "\"END\"" + " to end the list)");
+        System.out.println("Please enter the participants of the chat one by one: (\"/END\"" + " to end the list)");
 
         do {
             participant = scanner.nextLine();
 
-            while (!participant.equalsIgnoreCase("END") && !checkForKey(userList, participant)) {
+            while (!participant.equalsIgnoreCase("/END") && !checkForKey(userList, participant)) {
                 System.out.println("Such user doesn't exist! Please enter another.");
                 participant = scanner.nextLine();
             }
 
-            if (!participant.equalsIgnoreCase("END")) recipients.add(participant);
-        } while (!participant.equalsIgnoreCase("END"));
+            if (!participant.equalsIgnoreCase("/END")) recipients.add(participant);
+        } while (!participant.equalsIgnoreCase("/END"));
 
         if (recipients.size() == 1) {
+            /*
             //Check if the message file exists, if not then create it
-            messagesPath = Paths.get(createMessageTxtFileIfNotCreated(userName, recipients.get(0)));
-            composeMessage(userName, "", recipients.get(0), null, messagesPath, "", false);
+            messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0)));
+            //composeMessage(user.getUserName(), "", recipients.get(0), null, messagesPath, "", true);
+            chat(user, findChatNumber(user.getConversations(), "", recipients));*/
+            System.out.println("\nNot enough participants for a group chat!\n");
         } else {
             //Get the file path, or create it
-            messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, userName, ""));
+            messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, user.getUserName(), ""));
 
             //Extract group name from the message file path
             groupName = String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, "");
-
-            composeMessage(userName, groupName, "", recipients, messagesPath, "", false);
+            //composeMessage(userName, groupName, "", recipients, messagesPath, "", true);
+            chat(user, findChatNumber(user.getConversations(), "", recipients));
         }
     }
 
@@ -321,17 +350,16 @@ class MessagingMethods {
         }
     }
 
-    static void chat(User user, int chosenOption) throws IOException, ParseException {
+    static void chat(User user, String chosenOption) throws IOException {
         Scanner scanner = new Scanner(System.in);
         String answer, chatName, userMessageFilePath, menuText;
         ArrayList<String> recipients;
 
-        if (user.getConversations().size() != 0 && chosenOption != 0) {
-            menuText = " CHOOSE A CHAT ";
+        //If a chat has not been chosen then make the user do so
+        if (user.getConversations().size() != 0 && chosenOption.equals("")) {
+            menuText = " CHAT NUMBER|NEW CHAT (+) ";
             printEqualLengthMenuLine(menuText);
-            chosenOption = scanner.nextInt();
-        } else {
-            return;
+            chosenOption = scanner.nextLine();
         }
 
         if (user.getConversations().keySet().contains(chosenOption)) {
@@ -367,8 +395,6 @@ class MessagingMethods {
                 }
             } while (!answer.equalsIgnoreCase("/MENU"));
             user.setCurrentConversation("");
-        } else {
-            System.out.println("Unknown command.");
         }
     }
 
@@ -606,7 +632,7 @@ class MessagingMethods {
         if (!foundAllSubstrings) {
             File file3 = new File(fileNameToCheckAgainst);
             file3.createNewFile();
-            if (groupName.equals("")) System.out.println("Group " + file3.getName().replace(".txt", "") + " has been created!");
+            if (groupName.equals("")) System.out.println("Group " + file3.getName().replace(".txt", "") + " has been created!\n");
             return file3.getName();
         } else {
             return "";
