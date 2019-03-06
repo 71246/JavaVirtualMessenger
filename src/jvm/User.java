@@ -24,7 +24,6 @@ class User {
         this.friendsListFileName = userName + FinalClass.FRIEND_LIST_SUFFIX;
         setNewMessageLogFileName();
         createNewMessageLogFile();
-
     }
 
     private void createFriendListFile() throws IOException {
@@ -33,6 +32,14 @@ class User {
         if (!friendList.exists()) {
             friendList.createNewFile();
         }
+    }
+
+    public void addToFriendsList(String newFriend) {
+        this.friendsList.add(newFriend);
+    }
+
+    public ArrayList<String> getFriendsList() {
+        return friendsList;
     }
 
     String getUserName() {
@@ -47,14 +54,6 @@ class User {
         this.newMessageLogFileName = userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX;;
     }
 
-    public void addToFriendsList(String newFriend) {
-        this.friendsList.add(newFriend);
-    }
-
-    public ArrayList<String> getFriendsList() {
-        return friendsList;
-    }
-
     void collectConversations() {
         File directoryToSearchIn = new File(System.getProperty("user.dir"));
         int conversationCounter = 1;
@@ -67,7 +66,7 @@ class User {
                     conversationCounter++;
                 }
             }
-            numberOfConversations = conversationCounter;
+            numberOfConversations = conversationCounter - 1;
         }
     }
 
@@ -81,11 +80,12 @@ class User {
 
     void printConversations() {
         if (this.conversations.size() >= 1) {
-            System.out.println("\nHere are your ongoing chats:");
+            System.out.println("\nYOUR CHATS:");
 
             for (Map.Entry<Integer, String> conversation : this.conversations.entrySet()) {
                 System.out.println(conversation.getKey() + ". " + conversation.getValue());
             }
+            System.out.println();
         } else {
             System.out.println("You don't have any ongoing conversations.");
         }
@@ -115,7 +115,11 @@ class User {
         }
     }
 
-    public String getFriendsListFileName() {
+    String getFriendsListFileName() {
         return friendsListFileName;
+    }
+
+    public int getNumberOfConversations() {
+        return numberOfConversations;
     }
 }

@@ -106,12 +106,13 @@ class MessagingMethods {
     }
 
     static User logInUser(Map<String, String> userList) throws IOException {
-        String enteredUserName;
-        String enteredPassword;
+        String enteredUserName, enteredPassword, menuText;
         int triesLeft = 3;
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Please enter your user name:");
+        menuText = " LOGIN ";
+        printEqualLengthMenuLine(menuText);
+        System.out.println("USER NAME:");
         enteredUserName = scanner.next();
 
         //Check for entered user name in the user list
@@ -120,7 +121,7 @@ class MessagingMethods {
             enteredUserName = scanner.next();
         }
 
-        System.out.println("Please enter your password:");
+        System.out.println("PASSWORD:");
         enteredPassword = scanner.next();
 
         while (triesLeft > 0) {
@@ -129,7 +130,7 @@ class MessagingMethods {
             if (!checkForValue(userList, enteredUserName).equals(enteredPassword)) {
                 switch (triesLeft) {
                     case 0:
-                        System.out.print("Invalid password! You have exhausted your number of tries! The account will be blocked for 3 hours.");
+                        System.out.print("Invalid password! You have exhausted your number of tries! \nThe account will be blocked for 3 hours.");
                         System.exit(-1);
                     case 1:
                         System.out.print("Invalid password, try again! " + "This is your last try.\n");
@@ -144,7 +145,6 @@ class MessagingMethods {
             }
         }
 
-        System.out.println("\nWelcome back, " + enteredUserName + "!");
         return new User(enteredUserName, enteredPassword);
     }
 
@@ -321,14 +321,14 @@ class MessagingMethods {
         }
     }
 
-    static void chat(User user) throws IOException, ParseException {
+    static void chat(User user, int chosenOption) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
-        int chosenOption;
-        String answer, chatName, userMessageFilePath;
+        String answer, chatName, userMessageFilePath, menuText;
         ArrayList<String> recipients;
 
-        if (user.getConversations().size() != 0) {
-            System.out.println("\nChoose a conversation to continue:");
+        if (user.getConversations().size() != 0 && chosenOption != 0) {
+            menuText = " CHOOSE A CHAT ";
+            printEqualLengthMenuLine(menuText);
             chosenOption = scanner.nextInt();
         } else {
             return;
@@ -536,7 +536,7 @@ class MessagingMethods {
                 }
             }
         } else {
-            System.out.println("\nYou don't have any new messages!");
+            System.out.println("\nYou don't have any new messages!\n");
         }
     }
 
@@ -611,5 +611,35 @@ class MessagingMethods {
         } else {
             return "";
         }
+    }
+
+    private static int calculateNumberOfCharactersToMakeLineEqual(int menuTextLength) {
+        return Math.round((FinalClass.MENU_LINE_LENGTH - menuTextLength) / 2);
+    }
+
+    private static StringBuilder printCertainAmountOfCharacters(int amountToPrint) {
+        StringBuilder str = new StringBuilder();
+
+        for (int i = 1; i <= amountToPrint; i++) {
+            str.append(FinalClass.FILE_NAME_DELIMITER_DASH);
+        }
+        return str;
+    }
+
+    static void printEqualLengthMenuLine(String menuLineText) {
+        String extraCharacter = "";
+        if ((calculateNumberOfCharactersToMakeLineEqual(menuLineText.length()) * 2) + menuLineText.length() != FinalClass.MENU_LINE_LENGTH) {
+            extraCharacter = FinalClass.FILE_NAME_DELIMITER_DASH;
+        }
+        System.out.println(printCertainAmountOfCharacters(calculateNumberOfCharactersToMakeLineEqual(menuLineText.length())) +
+                menuLineText + printCertainAmountOfCharacters(calculateNumberOfCharactersToMakeLineEqual(menuLineText.length())) + extraCharacter);
+    }
+
+    static void printWelcomeText() {
+        System.out.println("   __      _____ _    ___ ___  __  __ ___   _____ ___       ___   ____  __ ");
+        System.out.println("   \\ \\    / / __| |  / __/ _ \\|  \\/  | __| |_   _/ _ \\   _ | \\ \\ / /  \\/  |");
+        System.out.println("    \\ \\/\\/ /| _|| |_| (_| (_) | |\\/| | _|    | || (_) | | || |\\ V /| |\\/| |");
+        System.out.println("     \\_/\\_/ |___|____\\___\\___/|_|  |_|___|   |_| \\___/   \\__/  \\_/ |_|  |_|");
+        System.out.println();
     }
 }

@@ -14,4 +14,5 @@ class FinalClass {
     final static String PASSWORD_PATTERN = "^(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\\s).*$";
     final static Path USER_LIST_PATH = Paths.get("MessengerUserList" + FILE_TYPE_SUFFIX);
     final static String FRIEND_LIST_SUFFIX = FILE_NAME_DELIMITER_DASH + "FriendList" + FILE_TYPE_SUFFIX;
+    final static int MENU_LINE_LENGTH = 80;
 }
