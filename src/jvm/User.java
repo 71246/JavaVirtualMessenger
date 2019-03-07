@@ -70,7 +70,7 @@ class User {
         }
     }
 
-    private void addToConversations(Integer queueNumber, String conversationName) {
+    void addToConversations(Integer queueNumber, String conversationName) {
         this.conversations.put(String.valueOf(queueNumber), conversationName);
     }
 
@@ -87,7 +87,7 @@ class User {
             }
             System.out.println();
         } else {
-            System.out.println("You don't have any ongoing conversations.");
+            System.out.println("You don't have any ongoing conversations.\n");
         }
     }
 
@@ -115,11 +115,11 @@ class User {
         }
     }
 
-    String getFriendsListFileName() {
+    private String getFriendsListFileName() {
         return friendsListFileName;
     }
 
-    public int getNumberOfConversations() {
+    int getNumberOfConversations() {
         return numberOfConversations;
     }
 }

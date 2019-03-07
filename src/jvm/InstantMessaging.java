@@ -43,13 +43,13 @@ class InstantMessaging {
 
     synchronized private static void printMatchingMessages(ArrayList<String> linesFromSender, String chatName) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(chatName));
-        String[] splitline;
+        String[] splitLine;
 
         for (String line: linesFromSender) {
             for (int c = lines.size() - 1; c >= 0; c--) {
                 if (lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
-                    splitline = line.split(FinalClass.CSV_DELIMITER);
-                    if (lines.get(c).replace(FinalClass.TIME_STAMP_TAG, "").equals(splitline[1])) {
+                    splitLine = line.split(FinalClass.CSV_DELIMITER);
+                    if (lines.get(c).replace(FinalClass.TIME_STAMP_TAG, "").equals(splitLine[1])) {
                         System.out.println(lines.get(c + 1) + "\n" + lines.get(c + 2));
                     }
                 }
@@ -105,12 +105,14 @@ class InstantMessaging {
                 splitLine = line.split(FinalClass.CSV_DELIMITER);
 
                 for (String recipient: currentSenders) {
-                    if (!splitLine[0].equals(recipient)) {
+                    if (!splitLine[0].equals(recipient) && splitLine[2].equals("0")) {
                         linesFromSender.add(line);
                     }
                 }
             }
         }
+
+        changeReadMessagesNotificationStatus(user, linesFromSender);
 
         return linesFromSender;
     }
@@ -134,13 +136,39 @@ class InstantMessaging {
         return newMessagesBySenders;
     }
 
-     synchronized private void notifyUserOfIncomingNewMessages(Map<String, Integer> newMessageListBySenders) {
+     synchronized private static void notifyUserOfIncomingNewMessages(Map<String, Integer> newMessageListBySenders) {
         for (Map.Entry<String, Integer> entry: newMessageListBySenders.entrySet()) {
             if (entry.getValue() == 1) {
                 System.out.println("(You have " + 1 + " new message from " + entry.getKey() + ")");
             } else {
                 System.out.println("(You have " + entry.getValue() + " new messages from " + entry.getKey() + ")");
             }
+        }
+    }
+
+    synchronized private static void changeReadMessagesNotificationStatus(User user, List<String> linesFromSender) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get(user.getNewMessageLogFileName()));
+        List<String> collectedLines = new ArrayList<>();
+
+        for (String newMessageLogLine: lines) {
+            for (String senderLine: linesFromSender) {
+                if (newMessageLogLine.equals(senderLine)) {
+                    collectedLines.add(newMessageLogLine.replace(FinalClass.CSV_DELIMITER + "0", FinalClass.CSV_DELIMITER + "1"));
+                } else {
+                    collectedLines.add(newMessageLogLine);
+                }
+            }
+        }
+
+        if (!collectedLines.isEmpty()) {
+            FileWriter fileWriter = new FileWriter(String.valueOf(user.getNewMessageLogFileName()));
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            for (String line : collectedLines) {
+                printWriter.write(line);
+            }
+
+            printWriter.close();
         }
     }
 

@@ -10,7 +10,7 @@ import java.util.*;
 
 class MessagingMethods {
 
-    static void chooseRecipient(User user, Map<String, String> userList) throws IOException, ParseException {
+    private static void chooseRecipient(User user, Map<String, String> userList) throws IOException, ParseException {
         String recipient;
         Path messagesPath;
         Scanner scanner = new Scanner(System.in);
@@ -31,12 +31,13 @@ class MessagingMethods {
         messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipient));
         user.collectConversations();
 
-        chat(user, findChatNumber(user.getConversations(), recipient, null));
+        chat(user, findChatNumber(user.getConversations(), recipient, null), userList);
         //composeMessage(userName, "", recipient, null, messagesPath, "", true);
     }
 
     private static String findChatNumber(Map<String, String> listOfConversations, String recipient, ArrayList<String> recipients) {
         boolean found = true;
+        String lastKey;
 
         if (!recipient.equals("")) {
             for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
@@ -45,20 +46,26 @@ class MessagingMethods {
                 }
             }
         } else {
-            for (String user: recipients) {
-                for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+            //For every conversation in the conversation list check if it contains ALL users of the entered chat name
+            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+                lastKey = entry.getKey();
+
+                for (String user: recipients) {
                     if (!entry.getValue().contains(user)) {
                         found = false;
                         break;
                     }
                 }
-                
+
+                if (found) {
+                    return lastKey;
+                }
             }
         }
         return "";
     }
 
-    static void chooseRecipients(User user, Map<String, String> userList) throws IOException {
+    private static void chooseRecipients(User user, Map<String, String> userList) throws IOException, ParseException {
         String participant, groupName;
         ArrayList<String> recipients = new ArrayList<>();
         Path messagesPath;
@@ -88,11 +95,12 @@ class MessagingMethods {
         } else {
             //Get the file path, or create it
             messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, user.getUserName(), ""));
+            user.addToConversations(user.getNumberOfConversations() + 1, String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, ""));
 
             //Extract group name from the message file path
             groupName = String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, "");
             //composeMessage(userName, groupName, "", recipients, messagesPath, "", true);
-            chat(user, findChatNumber(user.getConversations(), "", recipients));
+            chat(user, findChatNumber(user.getConversations(), "", recipients), userList);
         }
     }
 
@@ -350,7 +358,22 @@ class MessagingMethods {
         }
     }
 
-    static void chat(User user, String chosenOption) throws IOException {
+    static void regularOrGroupChatFork(User user, Map<String, String> userList) throws IOException, ParseException {
+        Scanner scanner = new Scanner(System.in);
+        String menuText, answer;
+
+        menuText = " REGULAR (1)|GROUP (2) ";
+        printEqualLengthMenuLine(menuText);
+        answer = scanner.nextLine();
+
+        if (answer.equals("2")) {
+            chooseRecipients(user, userList);
+        } else if (answer.equals("1")) {
+            chooseRecipient(user, userList);
+        }
+    }
+
+    static void chat(User user, String chosenOption, Map<String, String> userList) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
         String answer, chatName, userMessageFilePath, menuText;
         ArrayList<String> recipients;
@@ -362,7 +385,9 @@ class MessagingMethods {
             chosenOption = scanner.nextLine();
         }
 
-        if (user.getConversations().keySet().contains(chosenOption)) {
+        if (chosenOption.equals("+")) {
+            regularOrGroupChatFork(user, userList);
+        } else if (user.getConversations().keySet().contains(chosenOption)) {
             chatName = user.getConversations().get(chosenOption);
             user.setCurrentConversation(chatName);
 
@@ -470,7 +495,8 @@ class MessagingMethods {
                 writer.append(FinalClass.CSV_DELIMITER);
                 writer.append(timeStamp);
                 writer.append(FinalClass.CSV_DELIMITER);
-                writer.append(FinalClass.GROUP_CHAT_TAG);
+                writer.append("0");
+                //writer.append(FinalClass.GROUP_CHAT_TAG);
                 writer.close();
             }
         } else {
@@ -486,6 +512,7 @@ class MessagingMethods {
             writer.append(userName);
             writer.append(FinalClass.CSV_DELIMITER);
             writer.append(timeStamp);
+            writer.append("0");
             writer.close();
         }
     }
