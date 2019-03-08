@@ -2,44 +2,19 @@ package jvm;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 class User {
     private String userName;
-    private String password;
-    private ArrayList<String> friendsList = new ArrayList<>();
-    private String friendsListFileName;
-    private Map<String, String> conversations = new HashMap<>();
-    private String currentConversation = "";
+    private ArrayList<Conversation> conversations = new ArrayList<>();
+    private Conversation currentConversation;
     private int amountOfMessagesToShow = 10;
     private String newMessageLogFileName = "";
-    private int numberOfConversations;
 
-    User(String userName, String password) throws IOException {
+    User(String userName) throws IOException {
         this.userName = userName;
-        this.password = password;
-        this.friendsListFileName = userName + FinalClass.FRIEND_LIST_SUFFIX;
         setNewMessageLogFileName();
         createNewMessageLogFile();
-    }
-
-    private void createFriendListFile() throws IOException {
-        File friendList = new File(getFriendsListFileName());
-
-        if (!friendList.exists()) {
-            friendList.createNewFile();
-        }
-    }
-
-    public void addToFriendsList(String newFriend) {
-        this.friendsList.add(newFriend);
-    }
-
-    public ArrayList<String> getFriendsList() {
-        return friendsList;
     }
 
     String getUserName() {
@@ -55,26 +30,19 @@ class User {
     }
 
     void collectConversations() {
-        File directoryToSearchIn = new File(System.getProperty("user.dir"));
-        int conversationCounter = 1;
+        File directoryToSearchIn = new File("");
 
         if (directoryToSearchIn.isDirectory()) {
             String[] files = directoryToSearchIn.list();
-            for (String fileName : files) {
-                if (!fileName.contains(FinalClass.NEW_MESSAGE_LOG_SUFFIX) && fileName.contains(this.userName)) {
-                    addToConversations(conversationCounter, fileName.replace(FinalClass.FILE_TYPE_SUFFIX, ""));
-                    conversationCounter++;
+            for (String file : files) {
+                if (!file.contains(FinalClass.NEW_MESSAGE_LOG_SUFFIX) && file.contains(this.userName)) {
+                    this.conversations.add(new Conversation(file));
                 }
             }
-            numberOfConversations = conversationCounter - 1;
         }
     }
 
-    void addToConversations(Integer queueNumber, String conversationName) {
-        this.conversations.put(String.valueOf(queueNumber), conversationName);
-    }
-
-    Map<String, String> getConversations() {
+    ArrayList<Conversation> getConversations() {
         return conversations;
     }
 
@@ -82,10 +50,9 @@ class User {
         if (this.conversations.size() >= 1) {
             System.out.println("\nYOUR CHATS:");
 
-            for (Map.Entry<String, String> conversation : this.conversations.entrySet()) {
-                System.out.println(conversation.getKey() + ". " + conversation.getValue());
+            for (int i = 0; i < this.conversations.size(); i++) {
+                System.out.println(i + 1 + ". " + this.conversations.get(i));
             }
-            System.out.println();
         } else {
             System.out.println("You don't have any ongoing conversations.\n");
         }
@@ -99,12 +66,12 @@ class User {
         this.amountOfMessagesToShow = amountOfMessagesToShow;
     }
 
-    String getCurrentConversation() {
-        return currentConversation;
+    String getCurrentConversationName() {
+        return currentConversation.getName();
     }
 
-    void setCurrentConversation(String currentConversation) {
-        this.currentConversation = currentConversation;
+    void setCurrentConversation(Conversation conversation) {
+        this.currentConversation = conversation;
     }
 
     synchronized private void createNewMessageLogFile() throws IOException {
@@ -113,13 +80,5 @@ class User {
         if (!file.exists()) {
             file.createNewFile();
         }
-    }
-
-    private String getFriendsListFileName() {
-        return friendsListFileName;
-    }
-
-    int getNumberOfConversations() {
-        return numberOfConversations;
     }
 }

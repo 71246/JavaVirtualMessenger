@@ -16,8 +16,7 @@ public class Main {
         Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
 
-        //Create of find path of user list file
-        int resultOfFileCreation = createTextFileIfNotCreated(FinalClass.USER_LIST_PATH);
+        createTextFile(FinalClass.USER_LIST_PATH);
         userList = readFromCsvIntoMap();
 
         //Initialize User class
@@ -25,13 +24,13 @@ public class Main {
         user.collectConversations();
 
         //Chat window
-        if (user.getNumberOfConversations() >= 1) {
+        if (user.getConversations().size() >= 1) {
             printEqualLengthMenuLine(" CHAT ");
             user.printConversations();
             printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
             answer = scanner.nextLine();
 
-            if (user.getConversations().containsKey(answer)) {
+            if (user.getConversations().size() >= Integer.parseInt(answer)) {
                 chat(user, answer, userList);
                 answer = "-";
             }

@@ -73,7 +73,7 @@ class InitialProcesses {
             }
         }
 
-        return new User(enteredUserName, enteredPassword);
+        return new User(enteredUserName);
     }
 
     private static User registerNewUser(Map<String, String> userList) throws IOException {
@@ -109,7 +109,7 @@ class InitialProcesses {
 
         System.out.println("New user successfully created.\nWelcome to jvm, " + enteredUserName + "!");
 
-        return new User(enteredUserName, enteredPassword);
+        return new User(enteredUserName);
     }
 
     private static void appendUserNamePswToUserList(String stringToAdd) throws IOException {

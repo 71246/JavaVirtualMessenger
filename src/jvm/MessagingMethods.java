@@ -113,14 +113,14 @@ class MessagingMethods {
         return "";
     }
 
-    static Integer createTextFileIfNotCreated(Path filePath) throws IOException {
+    static boolean createTextFile(Path filePath) {
         File file = new File(String.valueOf(filePath));
 
-        if (filePath != null && !file.exists()) {
-            file.createNewFile();
-            return -1;
+        try {
+            return file.createNewFile();
+        } catch (IOException e) {
+            return false;
         }
-        return 0;
     }
 
     static boolean checkForKey(Map<String, String> userList, String nameToCheck) {
@@ -149,21 +149,6 @@ class MessagingMethods {
         writer.append(" says:\n");
         writer.append(message);
         writer.close();
-    }
-
-    static Map<String, String> readFromCsvIntoMap() throws IOException {
-        Map<String, String> map = new HashMap<>();
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(FinalClass.USER_LIST_PATH)));
-        String line;
-        line = bufferedReader.readLine();
-        String[] splitLines;
-
-        while ((line = bufferedReader.readLine()) != null) {
-            splitLines = line.split(FinalClass.CSV_DELIMITER);
-            map.put(splitLines[0], splitLines[1]);
-        }
-        bufferedReader.close();
-        return map;
     }
 
     private static String createTimeStamp() {
