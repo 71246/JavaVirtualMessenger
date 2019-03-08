@@ -11,27 +11,20 @@ import static jvm.InitialProcesses.*;
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
-        String menuText, answer;
-        //int answerInt;
-        boolean newChat = false;
+        String menuText, answer = "";
+        boolean newChat = false, exitCondition = false;
         Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
 
-        //Create the user list file if it doesn't yet exist
+        //Create of find path of user list file
         int resultOfFileCreation = createTextFileIfNotCreated(FinalClass.USER_LIST_PATH);
-
-        //Map the user list
         userList = readFromCsvIntoMap();
 
-        //Initialize jvm.User class
-        jvm.User user;
-
-        registerAndLogIn(userList);
-
-        //Display chat window immediately after
-        //logging in if user has ongoing chats
+        //Initialize User class
+        User user = registerAndLogIn(userList);
         user.collectConversations();
 
+        //Chat window
         if (user.getNumberOfConversations() >= 1) {
             menuText = " CHAT WINDOW ";
             printEqualLengthMenuLine(menuText);
@@ -40,40 +33,50 @@ public class Main {
             printEqualLengthMenuLine(menuText);
             answer = scanner.nextLine();
 
-            if (user.getConversations().keySet().contains(answer)) {
+            if (user.getConversations().containsKey(answer)) {
                 chat(user, answer, userList);
-            } else if (answer.equals("+")) {
-                newChat = true;
             }
+        } else {
+            answer = "-";
         }
 
         //Main processes
-        while (true) {
-            if (!newChat) {
-                menuText = " MAIN MENU ";
-                printEqualLengthMenuLine(menuText);
-                menuText = " CHECK MESSAGES (1)|CHAT (2)|SETTINGS (3)|LOGOUT (4) ";
-                printEqualLengthMenuLine(menuText);
-                answer = scanner.nextLine();
-            }
-
-            if (newChat) {
-                regularOrGroupChatFork(user, userList);
-                newChat = false;
-            } else if (answer.equals("1")) {
-                checkMessages(user);
-            } else if (answer.equals("2")) {
-                user.collectConversations();
-                user.printConversations();
-                chat(user, "", userList);
-                newChat = true;
-            } else if (answer.equals("3")) {
-                System.out.println("Feature under construction :)\n");
-            } else if (answer.equals("4")) {
-                System.out.println("Ya'll come back now! Ya hear?");
-                break;
-            } else {
-                System.out.println("Unknown command. Please try again!");
+        while (!exitCondition) {
+            switch (answer) {
+                case "-":
+                    System.out.println();
+                    menuText = " MAIN MENU ";
+                    printEqualLengthMenuLine(menuText);
+                    menuText = " CHECK MESSAGES (1)|CHAT (2)|SETTINGS (3)|LOGOUT (4) ";
+                    printEqualLengthMenuLine(menuText);
+                    answer = scanner.nextLine();
+                    break;
+                case "1":
+                    checkMessages(user);
+                    answer = "-";
+                    break;
+                case "2":
+                    chat(user, "", userList);
+                    answer = "-";
+                    break;
+                case "+":
+                    user.collectConversations();
+                    user.printConversations();
+                    chat(user, "", userList);
+                    answer = "-";
+                    break;
+                case "3":
+                    System.out.println("Feature under construction :)\n");
+                    answer = "-";
+                    break;
+                case "4":
+                    menuText = " SESSION TERMINATED ";
+                    printEqualLengthMenuLine(menuText);
+                    exitCondition = true;
+                    break;
+                default:
+                    System.out.println("\nUnknown command. Please try again!\n");
+                    answer = "-";
             }
         }
     }

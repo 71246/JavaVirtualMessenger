@@ -26,82 +26,91 @@ class MessagingMethods {
                 break;
             }
         }
-
-        //Check if the message file exists, if not then create it
         messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipient));
         user.collectConversations();
 
-        chat(user, findChatNumber(user.getConversations(), recipient, null), userList);
-        //composeMessage(userName, "", recipient, null, messagesPath, "", true);
-    }
-
-    private static String findChatNumber(Map<String, String> listOfConversations, String recipient, ArrayList<String> recipients) {
-        boolean found = true;
-        String lastKey;
-
-        if (!recipient.equals("")) {
-            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
-                if (entry.getValue().contains(recipient)) {
-                    return entry.getKey();
-                }
-            }
-        } else {
-            //For every conversation in the conversation list check if it contains ALL users of the entered chat name
-            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
-                lastKey = entry.getKey();
-
-                for (String user: recipients) {
-                    if (!entry.getValue().contains(user)) {
-                        found = false;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    return lastKey;
-                }
-            }
-        }
-        return "";
+        chat(user, findChatNumber(user, recipient, null), userList);
     }
 
     private static void chooseRecipients(User user, Map<String, String> userList) throws IOException, ParseException {
-        String participant, groupName;
+        String participant;
         ArrayList<String> recipients = new ArrayList<>();
         Path messagesPath;
         Scanner scanner = new Scanner(System.in);
 
         //Select group chat participants
         System.out.println("Please enter the participants of the chat one by one: (\"/END\"" + " to end the list)");
+        participant = scanner.nextLine();
 
-        do {
-            participant = scanner.nextLine();
-
-            while (!participant.equalsIgnoreCase("/END") && !checkForKey(userList, participant)) {
-                System.out.println("Such user doesn't exist! Please enter another.");
+        while (true) {
+            //Exit conditions
+            if (participant.equalsIgnoreCase("/END")) {
+                break;
+            } else if (!checkForKey(userList, participant)) {
+                System.out.println("Invalid user name! Please enter another:");
+                participant = scanner.nextLine();
+            } else if (participant.equals(user.getUserName())) {
+                System.out.println("There's no need to do that... Try again!");
+                participant = scanner.nextLine();
+            } else {
+                //Valid user name
+                recipients.add(participant);
                 participant = scanner.nextLine();
             }
+        }
 
-            if (!participant.equalsIgnoreCase("/END")) recipients.add(participant);
-        } while (!participant.equalsIgnoreCase("/END"));
-
-        if (recipients.size() == 1) {
-            /*
-            //Check if the message file exists, if not then create it
-            messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0)));
-            //composeMessage(user.getUserName(), "", recipients.get(0), null, messagesPath, "", true);
-            chat(user, findChatNumber(user.getConversations(), "", recipients));*/
+        if (recipients.size() <= 1) {
             System.out.println("\nNot enough participants for a group chat!\n");
         } else {
-            //Get the file path, or create it
             messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, user.getUserName(), ""));
             user.addToConversations(user.getNumberOfConversations() + 1, String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, ""));
-
-            //Extract group name from the message file path
-            groupName = String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, "");
-            //composeMessage(userName, groupName, "", recipients, messagesPath, "", true);
-            chat(user, findChatNumber(user.getConversations(), "", recipients), userList);
+            chat(user, findChatNumber(user, "", recipients), userList);
         }
+    }
+
+    private static String findChatNumber(User user, String recipient, ArrayList<String> recipients) {
+        Map<String, String> listOfConversations = user.getConversations();
+        boolean found;
+        String lastKey;
+        int numberOfUsersNeeded, numberOfUsersInMessageName;
+
+        if (!recipient.equals("")) {
+            numberOfUsersNeeded = 2;
+
+            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+                numberOfUsersInMessageName = splitStringByDelimiterIntoArrayList(entry.getValue(), user.getUserName()).size() + 1;
+
+                if (numberOfUsersInMessageName == numberOfUsersNeeded) {
+                    if (entry.getValue().contains(recipient)) {
+                        return entry.getKey();
+                    }
+                }
+            }
+        } else {
+            //For every conversation in the conversation list check if it contains ALL users of the entered chat name
+            numberOfUsersNeeded = recipients.size() + 1;
+
+            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
+                numberOfUsersInMessageName = splitStringByDelimiterIntoArrayList(entry.getValue(), user.getUserName()).size() + 1;
+
+                if (numberOfUsersInMessageName == numberOfUsersNeeded) {
+                    lastKey = entry.getKey();
+                    found = true;
+
+                    for (String member : recipients) {
+                        if (!entry.getValue().contains(member)) {
+                            found = false;
+                            break;
+                        }
+                    }
+
+                    if (found) {
+                        return lastKey;
+                    }
+                }
+            }
+        }
+        return "";
     }
 
     static Integer createTextFileIfNotCreated(Path filePath) throws IOException {
@@ -114,11 +123,11 @@ class MessagingMethods {
         return 0;
     }
 
-    private static boolean checkForKey(Map<String, String> userList, String nameToCheck) {
+    static boolean checkForKey(Map<String, String> userList, String nameToCheck) {
         return userList.containsKey(nameToCheck);
     }
 
-    private static String checkForValue(Map<String, String> userList, String nameToCheck) {
+    static String checkForValue(Map<String, String> userList, String nameToCheck) {
         if (checkForKey(userList, nameToCheck))
             return userList.get(nameToCheck);
 
@@ -142,49 +151,6 @@ class MessagingMethods {
         writer.close();
     }
 
-    static User logInUser(Map<String, String> userList) throws IOException {
-        String enteredUserName, enteredPassword, menuText;
-        int triesLeft = 3;
-        Scanner scanner = new Scanner(System.in);
-
-        menuText = " LOGIN ";
-        printEqualLengthMenuLine(menuText);
-        System.out.println("USER NAME:");
-        enteredUserName = scanner.next();
-
-        //Check for entered user name in the user list
-        while (!checkForKey(userList, enteredUserName)) {
-            System.out.print("Invalid user name, try again!\n");
-            enteredUserName = scanner.next();
-        }
-
-        System.out.println("PASSWORD:");
-        enteredPassword = scanner.next();
-
-        while (triesLeft > 0) {
-            triesLeft--;
-
-            if (!checkForValue(userList, enteredUserName).equals(enteredPassword)) {
-                switch (triesLeft) {
-                    case 0:
-                        System.out.print("Invalid password! You have exhausted your number of tries! \nThe account will be blocked for 3 hours.");
-                        System.exit(-1);
-                    case 1:
-                        System.out.print("Invalid password, try again! " + "This is your last try.\n");
-                        enteredPassword = scanner.next();
-                        break;
-                    case 2:
-                        System.out.print("Invalid password, try again! " + "You have " + triesLeft + " tries left.\n");
-                        enteredPassword = scanner.next();
-                        break;
-                    default:
-                }
-            }
-        }
-
-        return new User(enteredUserName, enteredPassword);
-    }
-
     static Map<String, String> readFromCsvIntoMap() throws IOException {
         Map<String, String> map = new HashMap<>();
         BufferedReader bufferedReader = new BufferedReader(new FileReader(String.valueOf(FinalClass.USER_LIST_PATH)));
@@ -198,13 +164,6 @@ class MessagingMethods {
         }
         bufferedReader.close();
         return map;
-    }
-
-    private static void appendUserNamePswToCSV(String stringToAdd, Path filePath) throws IOException {
-        FileWriter writer = new FileWriter(String.valueOf(filePath), true);
-        writer.append("\n");
-        writer.append(stringToAdd);
-        writer.close();
     }
 
     private static String createTimeStamp() {
@@ -263,40 +222,6 @@ class MessagingMethods {
             }
         }
         return null;
-    }
-
-    static User registerNewUser(Map<String, String> userList) throws IOException {
-        String enteredUserName;
-        String enteredPassword;
-        Scanner scanner = new Scanner(System.in);
-
-        //Prompt the user for a username
-        System.out.println("Please enter your desired user name:");
-        enteredUserName = scanner.next();
-
-        //Check if the entered username is free to use
-        while (checkForKey(userList, enteredUserName)) {
-            System.out.print("The selected username already exists, choose another one!\n");
-            enteredUserName = scanner.next();
-        }
-
-        //Prompt the user for a password, explain the requirements
-        System.out.println("Your username is " + enteredUserName + ".\nPlease provide a password.\nThe password has to be at least 8 characters long and it must contain " +
-                "\nat least one upper case, one lower case and one numeric character.");
-        enteredPassword = scanner.next();
-
-        //Check if entered password meets the requirements
-        while (!enteredPassword.matches(FinalClass.PASSWORD_PATTERN)) {
-            System.out.println("Password doesn't match the requirements. Try another one!");
-            enteredPassword = scanner.next();
-        }
-
-        //Save the new username into user list
-        appendUserNamePswToCSV(enteredUserName + FinalClass.CSV_DELIMITER + enteredPassword, FinalClass.USER_LIST_PATH);
-
-        System.out.println("New user successfully created.\nWelcome to jvm, " + enteredUserName + "!");
-
-        return new User(enteredUserName, enteredPassword);
     }
 
     private static void fetchNewMessages(Date firstUnreadMessage, String filePath) throws IOException, ParseException {
@@ -358,7 +283,7 @@ class MessagingMethods {
         }
     }
 
-    static void regularOrGroupChatFork(User user, Map<String, String> userList) throws IOException, ParseException {
+    private static void regularOrGroupChatFork(User user, Map<String, String> userList) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
         String menuText, answer;
 
@@ -378,13 +303,22 @@ class MessagingMethods {
         String answer, chatName, userMessageFilePath, menuText;
         ArrayList<String> recipients;
 
-        //If a chat has not been chosen then make the user do so
-        if (user.getConversations().size() != 0 && chosenOption.equals("")) {
-            menuText = " CHAT NUMBER|NEW CHAT (+) ";
-            printEqualLengthMenuLine(menuText);
-            chosenOption = scanner.nextLine();
+        //chosenOption = "": go into chat menu
+        if (chosenOption.equals("")) {
+            if (user.getConversations().size() != 0) {
+                user.printConversations();
+                menuText = " CHAT NUMBER|NEW CHAT (+)|MENU (-) ";
+                printEqualLengthMenuLine(menuText);
+                chosenOption = scanner.nextLine();
+            } else {
+                menuText = " NEW CHAT (+)|MENU (-) ";
+                printEqualLengthMenuLine(menuText);
+                chosenOption = scanner.nextLine();
+            }
         }
 
+        //chosenOption = "+": start a new chat
+        //chosenOption = existing conversation key: enter the existing chat
         if (chosenOption.equals("+")) {
             regularOrGroupChatFork(user, userList);
         } else if (user.getConversations().keySet().contains(chosenOption)) {
@@ -574,20 +508,6 @@ class MessagingMethods {
 
             //Remove current sender's logs from user's NewMessageLog, because the messages have now been read
             removeSendersLinesFromNewMessageLog(answer, Paths.get(user.getUserName() + FinalClass.NEW_MESSAGE_LOG_SUFFIX));
-
-            System.out.println("\nWould you like to reply? (Y/N)");
-            answer2 = scanner.next();
-
-            //Reply
-            if (answer2.equalsIgnoreCase("Y")) {
-                if (groupChat) {
-                    //Split groupName to separate pieces, remove userName to get recipients array
-                    ArrayList<String> recipients = splitStringByDelimiterIntoArrayList(answer, user.getUserName());
-                    composeMessage(user.getUserName(), answer,  "", recipients, Paths.get(userMessageFilePath), "", false);
-                } else {
-                    composeMessage(user.getUserName(), answer, answer, null, Paths.get(userMessageFilePath), "", false);
-                }
-            }
         } else {
             System.out.println("\nYou don't have any new messages!\n");
         }
