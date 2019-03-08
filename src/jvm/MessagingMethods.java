@@ -285,10 +285,9 @@ class MessagingMethods {
 
     private static void regularOrGroupChatFork(User user, Map<String, String> userList) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
-        String menuText, answer;
+        String answer;
 
-        menuText = " REGULAR (1)|GROUP (2) ";
-        printEqualLengthMenuLine(menuText);
+        printEqualLengthMenuLine(" REGULAR (1)|GROUP (2)|MENU (-) ");
         answer = scanner.nextLine();
 
         if (answer.equals("2")) {
@@ -300,19 +299,17 @@ class MessagingMethods {
 
     static void chat(User user, String chosenOption, Map<String, String> userList) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
-        String answer, chatName, userMessageFilePath, menuText;
+        String answer, chatName, userMessageFilePath;
         ArrayList<String> recipients;
 
         //chosenOption = "": go into chat menu
         if (chosenOption.equals("")) {
             if (user.getConversations().size() != 0) {
                 user.printConversations();
-                menuText = " CHAT NUMBER|NEW CHAT (+)|MENU (-) ";
-                printEqualLengthMenuLine(menuText);
+                printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
                 chosenOption = scanner.nextLine();
             } else {
-                menuText = " NEW CHAT (+)|MENU (-) ";
-                printEqualLengthMenuLine(menuText);
+                printEqualLengthMenuLine(" NEW CHAT (+)|MENU (-) ");
                 chosenOption = scanner.nextLine();
             }
         }
@@ -325,7 +322,8 @@ class MessagingMethods {
             chatName = user.getConversations().get(chosenOption);
             user.setCurrentConversation(chatName);
 
-            System.out.println("You are in a chat between " + chatName + "\nEnter \"/MENU\" to return to the menu.");
+            //System.out.println("You are in a chat between " + chatName + "\nEnter \"/MENU\" to return to the menu.");
+            printEqualLengthMenuLine(" " + chatName + " ");
             long count = chatName.chars().filter(ch -> ch == '-').count();
 
             fetchRecentMessages(user.getConversations().get(chosenOption), user.getAmountOfMessagesToShow());
@@ -333,10 +331,6 @@ class MessagingMethods {
             //Start thread to check for replies from recipients
             OngoingMessagesThread r = new OngoingMessagesThread(user, user.getCurrentConversation(), chatName + FinalClass.FILE_TYPE_SUFFIX);
             r.start();
-
-            //Check for new messages from other users
-            OtherMessagesThread s = new OtherMessagesThread(user, chatName);
-            s.start();
 
             do {
                 answer = scanner.nextLine();
@@ -358,35 +352,13 @@ class MessagingMethods {
     }
 
     private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message, boolean instantMessaging) throws IOException {
-        if (!instantMessaging) {
-            Scanner scanner = new Scanner(System.in);
-            String answer;
+        String currentTimeStamp = createTimeStamp();
+        saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
 
-            do {
-                System.out.println("\nPlease enter your message:");
-                message = scanner.nextLine();
-
-                String currentTimeStamp = createTimeStamp();
-                saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
-
-                if (groupName.equals("")) {
-                    saveSenderAndTimeStampToNewMessageLog(userName, "", recipient, null, currentTimeStamp);
-                } else {
-                    saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
-                }
-
-                System.out.println("\nDo you want to send another? (Y/N)");
-                answer = scanner.nextLine();
-            } while (answer.equalsIgnoreCase("Y"));
+        if (groupName.equals("")) {
+            saveSenderAndTimeStampToNewMessageLog(userName, "", recipient, null, currentTimeStamp);
         } else {
-            String currentTimeStamp = createTimeStamp();
-            saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
-
-            if (groupName.equals("")) {
-                saveSenderAndTimeStampToNewMessageLog(userName, "", recipient, null, currentTimeStamp);
-            } else {
-                saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
-            }
+            saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
         }
     }
 
@@ -430,7 +402,6 @@ class MessagingMethods {
                 writer.append(timeStamp);
                 writer.append(FinalClass.CSV_DELIMITER);
                 writer.append("0");
-                //writer.append(FinalClass.GROUP_CHAT_TAG);
                 writer.close();
             }
         } else {
@@ -446,6 +417,7 @@ class MessagingMethods {
             writer.append(userName);
             writer.append(FinalClass.CSV_DELIMITER);
             writer.append(timeStamp);
+            writer.append(FinalClass.CSV_DELIMITER);
             writer.append("0");
             writer.close();
         }

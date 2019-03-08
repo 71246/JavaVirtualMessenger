@@ -11,7 +11,7 @@ import static jvm.InitialProcesses.*;
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
-        String menuText, answer = "";
+        String answer;
         boolean newChat = false, exitCondition = false;
         Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
@@ -26,15 +26,14 @@ public class Main {
 
         //Chat window
         if (user.getNumberOfConversations() >= 1) {
-            menuText = " CHAT WINDOW ";
-            printEqualLengthMenuLine(menuText);
+            printEqualLengthMenuLine(" CHAT ");
             user.printConversations();
-            menuText = " CHAT NUMBER|NEW CHAT (+)|MENU (-) ";
-            printEqualLengthMenuLine(menuText);
+            printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
             answer = scanner.nextLine();
 
             if (user.getConversations().containsKey(answer)) {
                 chat(user, answer, userList);
+                answer = "-";
             }
         } else {
             answer = "-";
@@ -45,11 +44,15 @@ public class Main {
             switch (answer) {
                 case "-":
                     System.out.println();
-                    menuText = " MAIN MENU ";
-                    printEqualLengthMenuLine(menuText);
-                    menuText = " CHECK MESSAGES (1)|CHAT (2)|SETTINGS (3)|LOGOUT (4) ";
-                    printEqualLengthMenuLine(menuText);
+                    printEqualLengthMenuLine(" MAIN MENU ");
+                    printEqualLengthMenuLine(" CHECK MESSAGES (1)|CHAT (2)|SETTINGS (3)|LOGOUT (4) ");
                     answer = scanner.nextLine();
+                    break;
+                case "+":
+                    user.collectConversations();
+                    user.printConversations();
+                    chat(user, answer, userList);
+                    answer = "-";
                     break;
                 case "1":
                     checkMessages(user);
@@ -59,19 +62,12 @@ public class Main {
                     chat(user, "", userList);
                     answer = "-";
                     break;
-                case "+":
-                    user.collectConversations();
-                    user.printConversations();
-                    chat(user, "", userList);
-                    answer = "-";
-                    break;
                 case "3":
                     System.out.println("Feature under construction :)\n");
                     answer = "-";
                     break;
                 case "4":
-                    menuText = " SESSION TERMINATED ";
-                    printEqualLengthMenuLine(menuText);
+                    printEqualLengthMenuLine(" SESSION TERMINATED ");
                     exitCondition = true;
                     break;
                 default:

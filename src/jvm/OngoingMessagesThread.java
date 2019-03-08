@@ -21,7 +21,7 @@ public class OngoingMessagesThread extends Thread {
 
         try {
             while (!user.getCurrentConversation().equals("")) {
-                Thread.sleep(5000);
+                Thread.sleep(20000);
                 instantMessaging.checkIncomingOngoingChatMessages(user, chatName, messageFilePath);
             }
         } catch (IOException e) {

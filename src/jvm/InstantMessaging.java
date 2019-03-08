@@ -12,16 +12,15 @@ class InstantMessaging {
 
     void checkIncomingOngoingChatMessages(User user, String chatName, String messageFilePath) throws IOException {
         printMatchingMessages(getMessagesForOngoingChat(user, chatName), messageFilePath);
-        removeLinesFromNewMessageLog(user, chatName, Paths.get(user.getNewMessageLogFileName()));
-    }
-
-    void checkOtherIncomingMessages(User user, String chatName) throws IOException {
+        removeCurrentChatLinesFromNewMessageLog(user, chatName, Paths.get(user.getNewMessageLogFileName()));
         notifyUserOfIncomingNewMessages(countNumberOfNewMessages(getAllNewMessagesNotFromCurrentChat(user, chatName)));
     }
 
     synchronized private static ArrayList<String> getMessagesForOngoingChat(User user, String chatName) throws IOException {
         //Get all lines from NewMessageLog that are from a specific sender into an ArrayList
         List<String> lines = Files.readAllLines(Paths.get(user.getNewMessageLogFileName()));
+
+        System.out.println("All lines in NML:" + lines);
         ArrayList<String> linesFromSender = new ArrayList<>();
         ArrayList<String> currentSenders = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
         String[] splitLine;
@@ -37,11 +36,12 @@ class InstantMessaging {
                 }
             }
         }
-
+        System.out.println("getMessagesForOngoingChat" + linesFromSender);
         return linesFromSender;
     }
 
     synchronized private static void printMatchingMessages(ArrayList<String> linesFromSender, String chatName) throws IOException {
+
         List<String> lines = Files.readAllLines(Paths.get(chatName));
         String[] splitLine;
 
@@ -57,8 +57,9 @@ class InstantMessaging {
         }
     }
 
-    synchronized private static void removeLinesFromNewMessageLog(User user, String chatName, Path newMessageLogPath) throws IOException {
+    synchronized private static void removeCurrentChatLinesFromNewMessageLog(User user, String chatName, Path newMessageLogPath) throws IOException {
         List<String> fileContents = Files.readAllLines(newMessageLogPath);
+        System.out.println("NML content:" + fileContents);
         List<String> newContent = new ArrayList<>();
         String[] splitLines;
         ArrayList<String> namesToCheck = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
@@ -81,7 +82,8 @@ class InstantMessaging {
                     newContent.add(line);
                 }
             }
-
+            System.out.println("removed lines:");
+            System.out.println(newContent);
             FileWriter fileWriter = new FileWriter(String.valueOf(newMessageLogPath));
             PrintWriter printWriter = new PrintWriter(fileWriter);
 
@@ -106,6 +108,8 @@ class InstantMessaging {
 
                 for (String recipient: currentSenders) {
                     if (!splitLine[0].equals(recipient) && splitLine[2].equals("0")) {
+                        System.out.println("Added line:");
+                        System.out.println(line);
                         linesFromSender.add(line);
                     }
                 }
@@ -132,7 +136,6 @@ class InstantMessaging {
                 }
             }
         }
-
         return newMessagesBySenders;
     }
 
@@ -159,7 +162,8 @@ class InstantMessaging {
                 }
             }
         }
-
+        System.out.println("Collected lines:");
+        System.out.println(collectedLines);
         if (!collectedLines.isEmpty()) {
             FileWriter fileWriter = new FileWriter(String.valueOf(user.getNewMessageLogFileName()));
             PrintWriter printWriter = new PrintWriter(fileWriter);

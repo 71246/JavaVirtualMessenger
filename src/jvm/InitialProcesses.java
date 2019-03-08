@@ -11,13 +11,12 @@ class InitialProcesses {
 
     static User registerAndLogIn(Map<String, String> userList) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        String answer, menuText;
+        String answer;
 
         //Welcome the user and provide initial options
-        menuText =  " REGISTER (1)|LOGIN (2) ";
         System.out.println("Welcome to Java Virtual Messenger!\n");
         printWelcomeText();
-        printEqualLengthMenuLine(menuText);
+        printEqualLengthMenuLine(" REGISTER (1)|LOGIN (2) ");
         answer = scanner.nextLine();
 
         //Registering and logging in
@@ -40,8 +39,7 @@ class InitialProcesses {
         int triesLeft = 3;
         Scanner scanner = new Scanner(System.in);
 
-        menuText = " LOGIN ";
-        printEqualLengthMenuLine(menuText);
+        printEqualLengthMenuLine(" LOGIN ");
         System.out.println("USER NAME:");
         enteredUserName = scanner.next();
 
@@ -82,6 +80,8 @@ class InitialProcesses {
         String enteredUserName;
         String enteredPassword;
         Scanner scanner = new Scanner(System.in);
+
+        printEqualLengthMenuLine(" REGISTER ");
 
         //Prompt the user for a username
         System.out.println("Please enter your desired user name:");
