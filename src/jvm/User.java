@@ -1,6 +1,5 @@
 package jvm;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -52,13 +51,22 @@ class User {
                 this.conversations.add(new Conversation(splitLine[0], splitLine[1], Integer.parseInt(splitLine[2])));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to read from " + userName + FinalClass.USER_CONVERSATIONS_PATH_SUFFIX + "!");
         }
     }
 
     ArrayList<Conversation> getConversations() {
         return conversations;
+    }
+
+    Integer getConversationIndexByName(String conversationName) {
+        for (int i = 0; i < this.getConversations().size(); i++) {
+            if (this.getConversations().get(i).getName().equals(conversationName)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     void printConversations() {
@@ -84,6 +92,15 @@ class User {
 
     Conversation getCurrentConversation() {
         return this.currentConversation;
+    }
+
+    Conversation findConversationByName(String conversationName) {
+        for (int i = 0; i < this.getConversations().size(); i++) {
+            if (this.getConversations().get(i).getName().equals(conversationName)) {
+                return this.getConversations().get(i);
+            }
+        }
+        return null;
     }
 
     void setCurrentConversation(Conversation conversation) {

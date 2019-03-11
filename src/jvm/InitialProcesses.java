@@ -122,7 +122,8 @@ class InitialProcesses {
             writer.append(userNameAndPassword);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
+            System.out.println("A problem occurred while registering!");
         }
     }
 }

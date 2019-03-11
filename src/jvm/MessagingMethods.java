@@ -17,7 +17,8 @@ class MessagingMethods {
         List<String> recipients = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Whom do you wish to contact?\nYou can enter one name or several (\"/END\" to end).");
+        //System.out.println("Whom do you wish to contact?\nYou can enter one name or several (\"/END\" to end).");
+        printEqualLengthMenuLine(" ENTER RECIPIENTS AND \"/END\" ");
         enteredParticipant = scanner.nextLine();
 
         while (true) {
@@ -36,12 +37,14 @@ class MessagingMethods {
             }
         }
 
-        if (checkIfConversationHasAlreadyBeenCreated(user, recipients) <= 0) {
+        Integer doesConversationExist = checkIfConversationHasAlreadyBeenCreated(user, recipients);
+
+        if (doesConversationExist <= 0) {
             addToConversationsFile(user, new Conversation(createConversationName(user, recipients), "", 0), recipients);
         }
-        user.collectConversations();
 
-        chat(user, String.valueOf(checkIfConversationHasAlreadyBeenCreated(user, recipients)));
+        user.collectConversations();
+        chat(user, String.valueOf(doesConversationExist));
     }
 
     private static void addToConversationsFile(User user, Conversation conversation, List<String> recipients) {
@@ -63,6 +66,7 @@ class MessagingMethods {
                 writer.append(String.valueOf(conversation.getId()));
                 writer.close();
             } catch (IOException e) {
+                printEqualLengthMenuLine(" ERROR MESSAGE ");
                 System.out.println("A problem occurred while trying to write to " + recipientError + "'s conversation file!");
             }
         }
@@ -80,7 +84,8 @@ class MessagingMethods {
                 writer.append("name;alias;id");
                 writer.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                printEqualLengthMenuLine(" ERROR MESSAGE ");
+                System.out.println("A problem occurred while trying to create conversation file!");
 
             }
         }
@@ -124,6 +129,7 @@ class MessagingMethods {
 
             return -1;
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to read from " + user.getConversationFilePath() + "!");
         }
 
@@ -136,6 +142,7 @@ class MessagingMethods {
         try {
             return file.createNewFile();
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("There was a problem when creating file " + filePath + "!");
             return false;
         }
@@ -155,6 +162,7 @@ class MessagingMethods {
             writer.append(message);
             writer.close();
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred whiles trying to write to " + user.getCurrentConversation().getFileName() + "!");
         }
     }
@@ -169,6 +177,7 @@ class MessagingMethods {
         try {
             return Files.readAllLines(Paths.get(String.valueOf(user.getNewMessageLogFileName())));
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to write to " + user.getNewMessageLogFileName() + "!");
             return null;
         }
@@ -244,11 +253,11 @@ class MessagingMethods {
         return null;
     }
 
-    private static void fetchNewMessages(Date firstUnreadMessage, String filePath) {
+    private static void fetchNewMessages(User user, Date firstUnreadMessage) {
         List<String> lines;
 
         try {
-            lines = Files.readAllLines(Paths.get(filePath));
+            lines = Files.readAllLines(Paths.get(user.getCurrentConversation().getName() + FinalClass.FILE_TYPE_SUFFIX));
 
             //First loop determines the first/earliest message to be shown
             for (int i = 0; i < lines.size(); i++) {
@@ -272,11 +281,13 @@ class MessagingMethods {
                         }
 
                     } catch (ParseException e) {
+                        printEqualLengthMenuLine(" ERROR MESSAGE ");
                         System.out.println("A problem occurred while trying to parse a date!");
                     }
                 }
             }
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to fetch new messages!");
         }
     }
@@ -319,6 +330,7 @@ class MessagingMethods {
                 }
             }
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while fetching recent messages!");
         }
     }
@@ -343,12 +355,13 @@ class MessagingMethods {
         //chosenOption = existing conversation key: enter the existing chat
         if (chosenOption.equals("+")) {
             chooseRecipients(user);
-        } else if (Integer.parseInt(chosenOption) <= user.getConversations().size()) {
+        } else if(!chosenOption.equals("-") && Integer.parseInt(chosenOption) <= user.getConversations().size()) {
             user.setCurrentConversation(user.getConversations().get(Integer.parseInt(chosenOption) - 1));
             Conversation currentConversation = user.getCurrentConversation();
 
-            System.out.println("You are in a chat between " + currentConversation.getName() + "\nEnter \"/MENU\" to return to the menu.");
+            //System.out.println("You are in a chat between " + currentConversation.getName() + "\nEnter \"/MENU\" to return to the menu.\n");
             printEqualLengthMenuLine(" " + currentConversation.getName() + " ");
+            printEqualLengthMenuLine(" /MENU|/CHAT ");
 
             fetchRecentMessages(user);
 
@@ -358,11 +371,43 @@ class MessagingMethods {
 
             do {
                 answer = scanner.nextLine();
-                if (!answer.equals("") && !answer.equalsIgnoreCase("/MENU")) {
+                if (!answer.equals("") && !answer.equalsIgnoreCase("/MENU") && !answer.equalsIgnoreCase("/CHAT")) {
                     composeMessage(user, answer);
+                } else if (answer.equalsIgnoreCase("/CHAT")) {
+                    chat(user, "");
                 }
             } while (!answer.equalsIgnoreCase("/MENU"));
             user.setCurrentConversation(null);
+        }
+    }
+
+    static void checkMessages(User user) {
+        String answer;
+        Scanner scanner = new Scanner(System.in);
+        List<String> newMessagesLogList = getNewMessagesLog(user);
+
+        //Get a list of new messages by sender followed by the amount of new messages sent from them
+        List<String> newMessagesBySender = countNumberOfNewMessagesBySenderAndChat(newMessagesLogList);
+
+        //Display the new message list
+        if (newMessagesBySender.size() > 0) {
+            displayNewMessages(newMessagesBySender);
+            printEqualLengthMenuLine(" CHAT NUMBER ");
+            answer = scanner.nextLine();
+
+            Integer chatIndex = user.getConversationIndexByName(newMessagesBySender.get(Integer.parseInt(answer) - 1).split(FinalClass.CSV_DELIMITER)[1]);
+
+            if (chatIndex < 0) {
+                System.out.println("\nInvalid chat number!");
+                return;
+            }
+
+            String[] splitLine = newMessagesBySender.get(Integer.parseInt(answer) - 1).split(FinalClass.CSV_DELIMITER);
+            user.setCurrentConversation(user.findConversationByName(splitLine[1]));
+            chat(user, String.valueOf(chatIndex + 1));
+            //removeSendersLinesFromNewMessageLog(splitLine[0] + FinalClass.CSV_DELIMITER + splitLine[1]);
+        } else {
+            System.out.println("\nYou don't have any new messages!\n");
         }
     }
 
@@ -372,8 +417,9 @@ class MessagingMethods {
         saveSenderAndTimeStampToNewMessageLog(user, currentTimeStamp);
     }
 
-    private static void removeSendersLinesFromNewMessageLog(String sender, Path newMessageLogPath) {
+    private static void removeSendersLinesFromNewMessageLog(User user, String sender) {
         List<String> fileContents;
+        Path newMessageLogPath = Paths.get(user.getUserName() + FinalClass.NEW_MESSAGE_LOG_SUFFIX);
 
         try {
             fileContents = Files.readAllLines(newMessageLogPath);
@@ -400,6 +446,7 @@ class MessagingMethods {
 
             printWriter.close();
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to write to NML!");
         }
     }
@@ -423,58 +470,10 @@ class MessagingMethods {
                 writer.close();
             }
         } catch (IOException e) {
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred whiles trying to write to " + user.getNewMessageLogFileName() + "!");
         }
     }
-
-    static void checkMessages(User user) {
-        String answer = "", onlyRecipient = "";
-        Date parsedFirstUnreadMessage;
-        Scanner scanner = new Scanner(System.in);
-        List<String> newMessagesLogList = getNewMessagesLog(user);
-
-        //Get a list of new messages by sender followed by the amount of new messages sent from them
-        List<String> newMessagesBySender = countNumberOfNewMessagesBySenderAndChat(newMessagesLogList);
-
-        //Display the new message list
-        if (newMessagesBySender.size() > 0) {
-            displayNewMessages(newMessagesBySender);
-
-            //Prompt to read the messages
-            if (newMessagesBySender.size() > 1) {
-                printEqualLengthMenuLine(" CHAT NUMBER ");
-                answer = scanner.nextLine();
-
-                if (Integer.parseInt(answer) > user.getConversations().size()) {
-                    System.out.println("\nInvalid chat number!");
-                    return;
-                }
-            }
-
-            String[] splitLine = newMessagesBySender.get(Integer.parseInt(answer) - 1).split(FinalClass.CSV_DELIMITER);
-
-            //Determine the time of the first unread message by chosen sender
-            String firstUnreadMessage = getEarliestUnreadMessageTime(splitLine[1], newMessagesLogList);
-
-            try {
-                parsedFirstUnreadMessage = new SimpleDateFormat(FinalClass.TIME_STAMP_PATTERN).parse(firstUnreadMessage);
-
-                //Find the messages and print them out one after another
-                //fetchNewMessages(parsedFirstUnreadMessage, );
-
-                //Remove current sender's logs from user's NewMessageLog, because the messages have now been read
-                removeSendersLinesFromNewMessageLog(splitLine[0] + FinalClass.CSV_DELIMITER + splitLine[1], Paths.get(user.getUserName() + FinalClass.NEW_MESSAGE_LOG_SUFFIX));
-            } catch (ParseException e) {
-                System.out.println("A problem occurred while trying to parse a date in NML!");
-            }
-        } else {
-            System.out.println("\nYou don't have any new messages!\n");
-        }
-    }
-    /*
-    private static Integer findConversationNameByName(Integer chatName) {
-
-    }*/
 
     private static int calculateNumberOfCharactersToMakeLineEqual(int menuTextLength) {
         return Math.round((FinalClass.MENU_LINE_LENGTH - menuTextLength) / 2);

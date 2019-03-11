@@ -23,7 +23,7 @@ class UserList {
                 userList.put(splitLine[0], splitLine[1]);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to read from user list!");
         }
     }

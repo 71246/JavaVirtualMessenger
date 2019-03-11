@@ -25,7 +25,7 @@ public class Main {
             answer = scanner.nextLine();
 
             if (!answer.equals("+") && !answer.equals("-") && Integer.parseInt(answer) <= user.getConversations().size()) {
-                chat(user, answer);
+                chat(user, String.valueOf(Integer.parseInt(answer)));
                 answer = "-";
             }
         } else {
