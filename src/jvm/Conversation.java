@@ -2,28 +2,30 @@ package jvm;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static jvm.MessagingMethods.*;
 
 class Conversation {
     private int id;
     private String name;
     private String fileName;
     private String alias;
-    private ArrayList<String> participants;
-    private ArrayList<String> recipients;
+    private List<String> participants = new ArrayList<>();
+    private List<String> recipients = new ArrayList<>();
     private boolean groupChat;
 
-    Conversation(String name, String alias, int id, String[] participants) {
+    Conversation(String name, String alias, int id) {
         this.name = name;
         this.fileName = this.name + FinalClass.FILE_TYPE_SUFFIX;
+        createTextFile(Paths.get(this.fileName));
         this.alias = alias;
         this.id = id;
 
-        setParticipants(participants);
+        setParticipants(this.name.split(FinalClass.FILE_NAME_DELIMITER_DASH));
     }
 
     String getName() {
@@ -34,7 +36,7 @@ class Conversation {
         return fileName;
     }
 
-    private String getAlias() {
+    String getAlias() {
         return alias;
     }
 
@@ -46,7 +48,7 @@ class Conversation {
         this.participants.addAll(Arrays.asList(participants));
     }
 
-    private ArrayList<String> getParticipants() {
+    private List<String> getParticipants() {
         return this.participants;
     }
 
@@ -66,28 +68,12 @@ class Conversation {
         }
     }
 
-    ArrayList<String> getRecipients(String userName) {
+    List<String> getRecipients(String userName) {
         setRecipients(userName);
         return this.recipients;
     }
 
-    private int getId() {
+    int getId() {
         return id;
-    }
-
-    void addToConverationsFile(Conversation conversation) {
-        FileWriter writer;
-
-        try {
-            writer = new FileWriter(String.valueOf(conversation.getFileName()), true);
-            writer.append(conversation.getName());
-            writer.append(FinalClass.CSV_DELIMITER);
-            writer.append(conversation.getAlias());
-            writer.append(FinalClass.CSV_DELIMITER);
-            writer.append(String.valueOf(conversation.getId()));
-            writer.close();
-        } catch (IOException e) {
-            System.out.println("A problem occurred while trying to write to " + conversation.getFileName() + "!");
-        }
     }
 }

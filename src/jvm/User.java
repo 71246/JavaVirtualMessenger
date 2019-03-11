@@ -1,6 +1,6 @@
 package jvm;
 
-import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,16 +18,16 @@ class User {
     private String newMessageLogFileName;
     private String conversationFilePath;
 
-    User(String userName) throws IOException {
+    User(String userName) {
         this.userName = userName;
         this.newMessageLogFileName = userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX;
         this.conversationFilePath = this.userName + FinalClass.USER_CONVERSATIONS_PATH_SUFFIX;
-        createNewMessageLogFile();
-        createTextFile(Paths.get(conversationFilePath));
+        createNewMessageLogFile(this.newMessageLogFileName);
+        createConversationFile(this.conversationFilePath);
         collectConversations();
     }
 
-    public String getConversationFilePath() {
+    String getConversationFilePath() {
         return conversationFilePath;
     }
 
@@ -40,16 +40,16 @@ class User {
     }
 
     void collectConversations() {
+
         try {
+            this.conversations.clear();
             List<String> lines = Files.readAllLines(Paths.get(userName + FinalClass.USER_CONVERSATIONS_PATH_SUFFIX));
             String[] splitLine;
-            String[] participants;
 
             for (int i = 1; i < lines.size(); i++) {
                 splitLine = lines.get(i).split(FinalClass.CSV_DELIMITER);
-                participants = splitLine[0].split(FinalClass.FILE_NAME_DELIMITER_DASH);
 
-                this.conversations.add(new Conversation(splitLine[0], splitLine[1], Integer.parseInt(splitLine[2]), participants));
+                this.conversations.add(new Conversation(splitLine[0], splitLine[1], Integer.parseInt(splitLine[2])));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -66,8 +66,9 @@ class User {
             System.out.println("\nYOUR CHATS:");
 
             for (int i = 0; i < this.conversations.size(); i++) {
-                System.out.println(i + 1 + ". " + this.conversations.get(i));
+                System.out.println(i + 1 + ". " + this.conversations.get(i).getName());
             }
+            System.out.println();
         } else {
             System.out.println("You don't have any ongoing conversations.\n");
         }
@@ -89,13 +90,7 @@ class User {
         this.currentConversation = conversation;
     }
 
-    synchronized private void createNewMessageLogFile() {
-        createTextFile(Paths.get(this.newMessageLogFileName));
-    }
-
     String getPassword() {
         return password;
     }
-
-
 }

@@ -34,8 +34,8 @@ class InitialProcesses {
         }
     }
 
-    private static User logInUser() throws IOException {
-        String enteredUserName, enteredPassword, menuText;
+    private static User logInUser() {
+        String enteredUserName, enteredPassword;
         int triesLeft = 3;
         Scanner scanner = new Scanner(System.in);
 
@@ -76,7 +76,7 @@ class InitialProcesses {
         return new User(enteredUserName);
     }
 
-    private static User registerNewUser() throws IOException {
+    private static User registerNewUser() {
         String enteredUserName;
         String enteredPassword;
         Scanner scanner = new Scanner(System.in);
@@ -112,10 +112,17 @@ class InitialProcesses {
         return new User(enteredUserName);
     }
 
-    private static void appendUserNamePswToUserList(String stringToAdd) throws IOException {
-        FileWriter writer = new FileWriter(String.valueOf(FinalClass.USER_LIST_PATH), true);
-        writer.append("\n");
-        writer.append(stringToAdd);
-        writer.close();
+    private static void appendUserNamePswToUserList(String userNameAndPassword) {
+        FileWriter writer;
+
+        try {
+            writer = new FileWriter(String.valueOf(FinalClass.USER_LIST_PATH), true);
+
+            writer.append("\n");
+            writer.append(userNameAndPassword);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -15,16 +15,16 @@ class UserList {
         String[] splitLine;
 
         try {
-            if (createTextFile(FinalClass.USER_LIST_PATH)) {
-                List<String> lines = Files.readAllLines(FinalClass.USER_LIST_PATH);
+            createTextFile(FinalClass.USER_LIST_PATH);
+            List<String> lines = Files.readAllLines(FinalClass.USER_LIST_PATH);
 
-                for (String line: lines) {
-                    splitLine = line.split(FinalClass.CSV_DELIMITER);
-                    userList.put(splitLine[0], splitLine[1]);
-                }
+            for (String line: lines) {
+                splitLine = line.split(FinalClass.CSV_DELIMITER);
+                userList.put(splitLine[0], splitLine[1]);
             }
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("A problem occurred while trying to read from user list!");
         }
     }
 

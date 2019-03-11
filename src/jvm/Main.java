@@ -24,7 +24,7 @@ public class Main {
             printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
             answer = scanner.nextLine();
 
-            if (Integer.parseInt(answer) <= user.getConversations().size()) {
+            if (!answer.equals("+") && !answer.equals("-") && Integer.parseInt(answer) <= user.getConversations().size()) {
                 chat(user, answer);
                 answer = "-";
             }
