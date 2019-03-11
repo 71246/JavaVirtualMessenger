@@ -18,7 +18,7 @@ public class OngoingMessagesThread extends Thread {
 
     @Override
     public void run() {
-
+        /*
         try {
             while (!user.getCurrentConversation().equals("")) {
                 Thread.sleep(20000);
@@ -28,6 +28,6 @@ public class OngoingMessagesThread extends Thread {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 }

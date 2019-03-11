@@ -13,6 +13,4 @@ class InstantMessaging {
     void checkIncomingOngoingChatMessages(User user, String messageFilePath) throws IOException {
 
     }
-
-
 }

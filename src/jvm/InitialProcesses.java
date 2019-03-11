@@ -2,14 +2,14 @@ package jvm;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Scanner;
 
 import static jvm.MessagingMethods.*;
+import static jvm.UserList.*;
 
 class InitialProcesses {
 
-    static User registerAndLogIn(Map<String, String> userList) throws IOException {
+    static User registerAndLogIn() throws IOException {
         Scanner scanner = new Scanner(System.in);
         String answer;
 
@@ -23,10 +23,10 @@ class InitialProcesses {
         while (true) {
             if (answer.equals("1")) {
                 //Registering process
-                return registerNewUser(userList);
+                return registerNewUser();
             } else if (answer.equals("2")) {
                 //Log in process
-                return logInUser(userList);
+                return logInUser();
             } else {
                 System.out.println("Unknown command. Please try again!");
                 answer = scanner.nextLine();
@@ -34,7 +34,7 @@ class InitialProcesses {
         }
     }
 
-    private static User logInUser(Map<String, String> userList) throws IOException {
+    private static User logInUser() throws IOException {
         String enteredUserName, enteredPassword, menuText;
         int triesLeft = 3;
         Scanner scanner = new Scanner(System.in);
@@ -44,7 +44,7 @@ class InitialProcesses {
         enteredUserName = scanner.next();
 
         //Check for entered user name in the user list
-        while (!checkForKey(userList, enteredUserName)) {
+        while (isUserNameInvalid(enteredUserName)) {
             System.out.print("Invalid user name, try again!\n");
             enteredUserName = scanner.next();
         }
@@ -55,7 +55,7 @@ class InitialProcesses {
         while (triesLeft > 0) {
             triesLeft--;
 
-            if (!checkForValue(userList, enteredUserName).equals(enteredPassword)) {
+            if (!isPasswordValid(enteredUserName, enteredPassword)) {
                 switch (triesLeft) {
                     case 0:
                         System.out.print("Invalid password! You have exhausted your number of tries! \nThe account will be blocked for 3 hours.");
@@ -76,20 +76,20 @@ class InitialProcesses {
         return new User(enteredUserName);
     }
 
-    private static User registerNewUser(Map<String, String> userList) throws IOException {
+    private static User registerNewUser() throws IOException {
         String enteredUserName;
         String enteredPassword;
         Scanner scanner = new Scanner(System.in);
 
-        printEqualLengthMenuLine(" REGISTER ");
+        printEqualLengthMenuLine(" REGISTERING ");
 
         //Prompt the user for a username
         System.out.println("Please enter your desired user name:");
         enteredUserName = scanner.next();
 
         //Check if the entered username is free to use
-        while (checkForKey(userList, enteredUserName)) {
-            System.out.print("The selected username already exists, choose another one!\n");
+        while (isUserNameInvalid(enteredUserName)) {
+            System.out.print("Invalid user name, please choose another one!\n");
             enteredUserName = scanner.next();
         }
 

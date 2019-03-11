@@ -2,26 +2,20 @@ package jvm;
 
 import java.io.*;
 import java.text.ParseException;
-import java.util.Map;
 import java.util.Scanner;
 
 import static jvm.MessagingMethods.*;
 import static jvm.InitialProcesses.*;
+import static jvm.UserList.*;
 
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
-        String answer;
-        boolean newChat = false, exitCondition = false;
-        Map<String, String> userList;
         Scanner scanner = new Scanner(System.in);
-
-        createTextFile(FinalClass.USER_LIST_PATH);
-        userList = readFromCsvIntoMap();
-
-        //Initialize User class
-        User user = registerAndLogIn(userList);
-        user.collectConversations();
+        String answer;
+        boolean exitCondition = false;
+        populateUserList();
+        User user = registerAndLogIn();
 
         //Chat window
         if (user.getConversations().size() >= 1) {
@@ -30,8 +24,8 @@ public class Main {
             printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
             answer = scanner.nextLine();
 
-            if (user.getConversations().size() >= Integer.parseInt(answer)) {
-                chat(user, answer, userList);
+            if (Integer.parseInt(answer) <= user.getConversations().size()) {
+                chat(user, answer);
                 answer = "-";
             }
         } else {
@@ -50,7 +44,7 @@ public class Main {
                 case "+":
                     user.collectConversations();
                     user.printConversations();
-                    chat(user, answer, userList);
+                    chat(user, answer);
                     answer = "-";
                     break;
                 case "1":
@@ -58,7 +52,7 @@ public class Main {
                     answer = "-";
                     break;
                 case "2":
-                    chat(user, "", userList);
+                    chat(user, "");
                     answer = "-";
                     break;
                 case "3":

@@ -8,108 +8,70 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static jvm.UserList.*;
+
 class MessagingMethods {
 
-    private static void chooseRecipient(User user, Map<String, String> userList) throws IOException, ParseException {
-        String recipient;
-        Path messagesPath;
+    private static void chooseRecipients(User user) throws IOException, ParseException {
+        String enteredParticipant;
+        List<String> recipients = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Whom do you wish to contact?");
-        recipient = scanner.nextLine();
+        System.out.println("Whom do you wish to contact?\n You can enter one name or several. (\"/END\" to end)");
+        enteredParticipant = scanner.nextLine();
 
         while (true) {
-            if (!checkForKey(userList, recipient)) {
-                System.out.println("Such user doesn't exist! Please enter another.");
-                recipient = scanner.nextLine();
-            } else {
+            if (enteredParticipant.equalsIgnoreCase("/END")) {
                 break;
-            }
-        }
-        messagesPath = Paths.get(createMessageTxtFileIfNotCreated(user.getUserName(), recipient));
-        user.collectConversations();
-
-        chat(user, findChatNumber(user, recipient, null), userList);
-    }
-
-    private static void chooseRecipients(User user, Map<String, String> userList) throws IOException, ParseException {
-        String participant;
-        ArrayList<String> recipients = new ArrayList<>();
-        Path messagesPath;
-        Scanner scanner = new Scanner(System.in);
-
-        //Select group chat participants
-        System.out.println("Please enter the participants of the chat one by one: (\"/END\"" + " to end the list)");
-        participant = scanner.nextLine();
-
-        while (true) {
-            //Exit conditions
-            if (participant.equalsIgnoreCase("/END")) {
-                break;
-            } else if (!checkForKey(userList, participant)) {
+            } else if (isUserNameInvalid(enteredParticipant)) {
                 System.out.println("Invalid user name! Please enter another:");
-                participant = scanner.nextLine();
-            } else if (participant.equals(user.getUserName())) {
+                enteredParticipant = scanner.nextLine();
+            } else if (enteredParticipant.equals(user.getUserName())) {
                 System.out.println("There's no need to do that... Try again!");
-                participant = scanner.nextLine();
+                enteredParticipant = scanner.nextLine();
             } else {
                 //Valid user name
-                recipients.add(participant);
-                participant = scanner.nextLine();
+                recipients.add(enteredParticipant);
+                enteredParticipant = scanner.nextLine();
             }
         }
 
-        if (recipients.size() <= 1) {
-            System.out.println("\nNot enough participants for a group chat!\n");
-        } else {
-            messagesPath = Paths.get(searchForFileNameContainingSubstring(recipients, user.getUserName(), ""));
-            user.addToConversations(user.getNumberOfConversations() + 1, String.valueOf(messagesPath).replace(FinalClass.FILE_TYPE_SUFFIX, ""));
-            chat(user, findChatNumber(user, "", recipients), userList);
-        }
+        checkIfConversationHasAlreadyBeenCreated(user, recipients);
+        user.collectConversations();
+
+        chat(user, checkIfConversationHasAlreadyBeenCreated(user, recipients));
     }
 
-    private static String findChatNumber(User user, String recipient, ArrayList<String> recipients) {
-        Map<String, String> listOfConversations = user.getConversations();
-        boolean found;
-        String lastKey;
-        int numberOfUsersNeeded, numberOfUsersInMessageName;
+    private static String checkIfConversationHasAlreadyBeenCreated(User user, List<String> participants) {
 
-        if (!recipient.equals("")) {
-            numberOfUsersNeeded = 2;
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(user.getConversationFilePath()));
+            String[] splitLine;
+            int numberOfParticipants;
+            boolean found;
 
-            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
-                numberOfUsersInMessageName = splitStringByDelimiterIntoArrayList(entry.getValue(), user.getUserName()).size() + 1;
+            for (String line: lines) {
+                splitLine = line.split(FinalClass.CSV_DELIMITER);
+                numberOfParticipants = splitLine[0].split(FinalClass.FILE_NAME_DELIMITER_DASH).length;
+                found = true;
 
-                if (numberOfUsersInMessageName == numberOfUsersNeeded) {
-                    if (entry.getValue().contains(recipient)) {
-                        return entry.getKey();
+                for (String participant: participants) {
+                    if (!splitLine[0].contains(participant)) {
+                        found = false;
+                        break;
                     }
                 }
-            }
-        } else {
-            //For every conversation in the conversation list check if it contains ALL users of the entered chat name
-            numberOfUsersNeeded = recipients.size() + 1;
 
-            for (Map.Entry<String, String> entry : listOfConversations.entrySet()) {
-                numberOfUsersInMessageName = splitStringByDelimiterIntoArrayList(entry.getValue(), user.getUserName()).size() + 1;
-
-                if (numberOfUsersInMessageName == numberOfUsersNeeded) {
-                    lastKey = entry.getKey();
-                    found = true;
-
-                    for (String member : recipients) {
-                        if (!entry.getValue().contains(member)) {
-                            found = false;
-                            break;
-                        }
-                    }
-
-                    if (found) {
-                        return lastKey;
-                    }
+                if (found && participants.size() == numberOfParticipants) {
+                    return splitLine[0];
                 }
             }
+
+            return "";
+        } catch (IOException e) {
+            System.out.println("A problem occurred while trying to read from " + user.getConversationFilePath() + "!");
         }
+
         return "";
     }
 
@@ -119,36 +81,27 @@ class MessagingMethods {
         try {
             return file.createNewFile();
         } catch (IOException e) {
+            System.out.println("There was a problem when creating file " + filePath + "!");
             return false;
         }
     }
 
-    static boolean checkForKey(Map<String, String> userList, String nameToCheck) {
-        return userList.containsKey(nameToCheck);
-    }
+    private static void saveMessageToTextFile(User user, String message, String timeStamp) {
+        FileWriter writer;
 
-    static String checkForValue(Map<String, String> userList, String nameToCheck) {
-        if (checkForKey(userList, nameToCheck))
-            return userList.get(nameToCheck);
-
-        return null;
-    }
-
-    private static void saveMessageToTextFile(String userName, String message, Path messagesPath, String timeStamp) throws IOException {
-        int resultOfFileCreation = createTextFileIfNotCreated(messagesPath);
-
-        FileWriter writer = new FileWriter(String.valueOf(messagesPath), true);
-        if (resultOfFileCreation == 0) {
+        try {
+            writer = new FileWriter(String.valueOf(user.getCurrentConversation().getFileName()), true);
             writer.append("\n");
+            writer.append(FinalClass.TIME_STAMP_TAG);
+            writer.append(timeStamp);
+            writer.append("\n");
+            writer.append(user.getUserName());
+            writer.append(" says:\n");
+            writer.append(message);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("A problem occurred whiles trying to write to " + user.getCurrentConversation().getFileName() + "!");
         }
-
-        writer.append(FinalClass.TIME_STAMP_TAG);
-        writer.append(timeStamp);
-        writer.append("\n");
-        writer.append(userName);
-        writer.append(" says:\n");
-        writer.append(message);
-        writer.close();
     }
 
     private static String createTimeStamp() {
@@ -157,10 +110,13 @@ class MessagingMethods {
         return sdfDate.format(now);
     }
 
-    private static List<String> getNewMessagesLog(String userName) throws IOException {
-        Path newMessageLogPath = Paths.get(userName + FinalClass.NEW_MESSAGE_LOG_SUFFIX);
-        int resultOfFileCreation = createTextFileIfNotCreated(newMessageLogPath);
-        return Files.readAllLines(Paths.get(String.valueOf(newMessageLogPath)));
+    private static List<String> getNewMessagesLog(User user) {
+        try {
+            return Files.readAllLines(Paths.get(String.valueOf(user.getNewMessageLogFileName())));
+        } catch (IOException e) {
+            System.out.println("A problem occurred whiles trying to write to " + user.getNewMessageLogFileName() + "!");
+            return null;
+        }
     }
 
     private static Map<String, Integer> countNumberOfNewMessages(List<String> newMessageLogList) {
@@ -232,8 +188,8 @@ class MessagingMethods {
         }
     }
 
-    private static void fetchRecentMessages(String senders, Integer numberOfMessagesToLoad) throws IOException {
-        String filename = senders + FinalClass.FILE_TYPE_SUFFIX;
+    private static void fetchRecentMessages(User user) throws IOException {
+        String filename = user.getCurrentConversation().getName() + FinalClass.FILE_TYPE_SUFFIX;
         List<String> lines = Files.readAllLines(Paths.get(filename));
         int messageCounter = 0, numberOfMessages = 0;
 
@@ -243,12 +199,12 @@ class MessagingMethods {
         }
 
         //Count backwards the amount of messages to load or print all messages if there's less messages in the file
-        if (numberOfMessagesToLoad <= numberOfMessages) {
+        if (user.getAmountOfMessagesToShow() <= numberOfMessages) {
             //Start from the last message and count backwards until the specified number of messages to show is reached
             for (int i = lines.size() - 1; i >= 0; i--) {
                 if (lines.get(i).contains(FinalClass.TIME_STAMP_TAG)) {
                     messageCounter++;
-                    if (messageCounter == numberOfMessagesToLoad) {
+                    if (messageCounter == user.getAmountOfMessagesToShow()) {
                         for (int c = i; c < lines.size(); c++) {
                             if (!lines.get(c).contains(FinalClass.TIME_STAMP_TAG)) {
                                 System.out.println(lines.get(c));
@@ -268,7 +224,7 @@ class MessagingMethods {
         }
     }
 
-    private static void regularOrGroupChatFork(User user, Map<String, String> userList) throws IOException, ParseException {
+    private static void regularOrGroupChatFork(User user) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
         String answer;
 
@@ -276,16 +232,15 @@ class MessagingMethods {
         answer = scanner.nextLine();
 
         if (answer.equals("2")) {
-            chooseRecipients(user, userList);
+            chooseRecipients(user);
         } else if (answer.equals("1")) {
-            chooseRecipient(user, userList);
+            chooseRecipients(user);
         }
     }
 
-    static void chat(User user, String chosenOption, Map<String, String> userList) throws IOException, ParseException {
+    static void chat(User user, String chosenOption) throws IOException, ParseException {
         Scanner scanner = new Scanner(System.in);
-        String answer, chatName, userMessageFilePath;
-        ArrayList<String> recipients;
+        String answer;
 
         //chosenOption = "": go into chat menu
         if (chosenOption.equals("")) {
@@ -302,49 +257,35 @@ class MessagingMethods {
         //chosenOption = "+": start a new chat
         //chosenOption = existing conversation key: enter the existing chat
         if (chosenOption.equals("+")) {
-            regularOrGroupChatFork(user, userList);
-        } else if (user.getConversations().keySet().contains(chosenOption)) {
-            chatName = user.getConversations().get(chosenOption);
-            user.setCurrentConversation(chatName);
+            regularOrGroupChatFork(user);
+        } else if (Integer.parseInt(chosenOption) <= user.getUserName().length()) {
+            user.setCurrentConversation(user.getConversations().get(Integer.parseInt(chosenOption)));
+            Conversation currentConversation = user.getCurrentConversation();
 
-            //System.out.println("You are in a chat between " + chatName + "\nEnter \"/MENU\" to return to the menu.");
-            printEqualLengthMenuLine(" " + chatName + " ");
-            long count = chatName.chars().filter(ch -> ch == '-').count();
+            System.out.println("You are in a chat between " + currentConversation.getName() + "\nEnter \"/MENU\" to return to the menu.");
+            printEqualLengthMenuLine(" " + currentConversation.getName() + " ");
 
-            fetchRecentMessages(user.getConversations().get(chosenOption), user.getAmountOfMessagesToShow());
+            fetchRecentMessages(user);
 
             //Start thread to check for replies from recipients
-            OngoingMessagesThread r = new OngoingMessagesThread(user, user.getCurrentConversation(), chatName + FinalClass.FILE_TYPE_SUFFIX);
-            r.start();
+            //OngoingMessagesThread r = new OngoingMessagesThread(user, user.getCurrentConversation(), chatName + FinalClass.FILE_TYPE_SUFFIX);
+            //r.start();
 
             do {
                 answer = scanner.nextLine();
                 if (!answer.equals("") && !answer.equalsIgnoreCase("/MENU")) {
-                    recipients = splitStringByDelimiterIntoArrayList(chatName, user.getUserName());
-
-                    //If group chat or private
-                    if (count >= 2) {
-                        userMessageFilePath = searchForFileNameContainingSubstring(null, user.getUserName(), chatName);
-                        composeMessage(user.getUserName(), chatName, "", recipients, Paths.get(userMessageFilePath), answer, true);
-                    } else {
-                        userMessageFilePath = createMessageTxtFileIfNotCreated(user.getUserName(), recipients.get(0));
-                        composeMessage(user.getUserName(), "", recipients.get(0), null, Paths.get(userMessageFilePath), answer, true);
-                    }
+                    composeMessage(user, answer);
                 }
             } while (!answer.equalsIgnoreCase("/MENU"));
-            user.setCurrentConversation("");
+            user.setCurrentConversation(null);
         }
     }
 
-    private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message, boolean instantMessaging) throws IOException {
+    //private static void composeMessage(String userName, String groupName, String recipient, ArrayList<String> recipients, Path messagesPath, String message, boolean instantMessaging) throws IOException {
+    private static void composeMessage(User user, String message) {
         String currentTimeStamp = createTimeStamp();
-        saveMessageToTextFile(userName, message, messagesPath, currentTimeStamp);
-
-        if (groupName.equals("")) {
-            saveSenderAndTimeStampToNewMessageLog(userName, "", recipient, null, currentTimeStamp);
-        } else {
-            saveSenderAndTimeStampToNewMessageLog("", groupName, "", recipients, currentTimeStamp);
-        }
+        saveMessageToTextFile(user, message, currentTimeStamp);
+        saveSenderAndTimeStampToNewMessageLog(user, currentTimeStamp);
     }
 
     private static void removeSendersLinesFromNewMessageLog(String sender, Path newMessageLogPath) throws IOException {
@@ -370,41 +311,21 @@ class MessagingMethods {
         printWriter.close();
     }
 
-    private static void saveSenderAndTimeStampToNewMessageLog(String userName, String groupName, String recipient, ArrayList<String> recipients, String timeStamp) throws IOException {
-        if (recipient.equals("")) {
-            for (String user : recipients) {
-                Path newMessageLogPath = Paths.get(user + FinalClass.NEW_MESSAGE_LOG_SUFFIX);
-                int resultOfFileCreation = createTextFileIfNotCreated(newMessageLogPath);
+    private static void saveSenderAndTimeStampToNewMessageLog(User user, String timeStamp) {
+        FileWriter writer;
 
-                FileWriter writer = new FileWriter(String.valueOf(newMessageLogPath), true);
+        try {
+            writer = new FileWriter(String.valueOf(user.getNewMessageLogFileName()), true);
 
-                if (resultOfFileCreation == 0) {
-                    writer.append("\n");
-                }
-
-                writer.append(groupName);
-                writer.append(FinalClass.CSV_DELIMITER);
-                writer.append(timeStamp);
-                writer.append(FinalClass.CSV_DELIMITER);
-                writer.append("0");
-                writer.close();
-            }
-        } else {
-            Path newMessageLogPath = Paths.get(recipient + FinalClass.NEW_MESSAGE_LOG_SUFFIX);
-            int resultOfFileCreation = createTextFileIfNotCreated(newMessageLogPath);
-
-            FileWriter writer = new FileWriter(String.valueOf(newMessageLogPath), true);
-
-            if (resultOfFileCreation == 0) {
-                writer.append("\n");
-            }
-
-            writer.append(userName);
+            writer.append("\n");
+            writer.append(user.getUserName());
             writer.append(FinalClass.CSV_DELIMITER);
             writer.append(timeStamp);
             writer.append(FinalClass.CSV_DELIMITER);
             writer.append("0");
             writer.close();
+        } catch (IOException e) {
+            System.out.println("A problem occurred whiles trying to write to " + user.getNewMessageLogFileName() + "!");
         }
     }
 
@@ -413,7 +334,7 @@ class MessagingMethods {
         boolean groupChat = false;
         Scanner scanner = new Scanner(System.in);
 
-        List<String> newMessagesLogList = getNewMessagesLog(user.getUserName());
+        List<String> newMessagesLogList = getNewMessagesLog(user);
 
         //Get a list of new messages by sender followed by the amount of new messages sent from them
         Map<String, Integer> newMessagesBySender = countNumberOfNewMessages(newMessagesLogList);
