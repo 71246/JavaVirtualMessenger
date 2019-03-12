@@ -5,9 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static jvm.MessagingMethods.*;
 
@@ -22,7 +23,7 @@ class InstantMessaging {
 
         //Get two lists: first one containing all new messages for
         //current conversation the second containing all other new messages
-        List<List> newMessagesForBothCurrentAndOther = separateNewMessagesByCurrentAndOther(user);
+        List<List<String>> newMessagesForBothCurrentAndOther = separateNewMessagesByCurrentAndOther(user);
 
         //Display current conversation's messages immediately
         try {
@@ -35,6 +36,42 @@ class InstantMessaging {
             //e.printStackTrace();
         } catch (ParseException e) {
             //System.out.println(e.getMessage());
+        }
+
+        collectAndNotifyUserOfOtherNewMessages(newMessagesForBothCurrentAndOther.get(1));
+    }
+
+    private static void changeOtherMessagesNotificationStatus(User user, List<String> otherNewMessages) {
+
+    }
+
+    private static void collectAndNotifyUserOfOtherNewMessages(List<String> messagesToDisplay) {
+        Map<String, Integer> collectedArray = new HashMap<>();
+        String pluralitySuffix;
+        String[] splitLine;
+
+        for (String line: messagesToDisplay) {
+            splitLine = line.split(FinalClass.CSV_DELIMITER);
+
+            if (Integer.parseInt(splitLine[2]) == 0) {
+                if (collectedArray.containsKey(splitLine[1])) {
+                    collectedArray.put(splitLine[1], collectedArray.get(splitLine[1]) + 1);
+                } else {
+                    collectedArray.put(splitLine[1], 1);
+                }
+            }
+        }
+
+        if (!collectedArray.isEmpty()) {
+            for (Map.Entry<String, Integer> entry: collectedArray.entrySet()) {
+                if (entry.getValue() > 1) {
+                    pluralitySuffix = "s";
+                } else {
+                    pluralitySuffix = "";
+                }
+
+                System.out.println("You have " + entry.getValue() + "message" + pluralitySuffix + " from " + entry.getKey());
+            }
         }
     }
 

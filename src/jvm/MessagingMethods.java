@@ -4,7 +4,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -179,7 +178,7 @@ class MessagingMethods {
         } catch (IOException e) {
             printEqualLengthMenuLine(" ERROR MESSAGE ");
             System.out.println("A problem occurred while trying to write to " + user.getNewMessageLogFileName() + "!");
-            return null;
+            return Collections.emptyList();
         }
     }
 
@@ -312,7 +311,7 @@ class MessagingMethods {
             printEqualLengthMenuLine(" " + user.getCurrentConversation().getName() + " ");
             printEqualLengthMenuLine(" /MENU|/CHAT ");
 
-            List<List> newMessagesForBothCurrentAndOther = separateNewMessagesByCurrentAndOther(user);
+            List<List<String>> newMessagesForBothCurrentAndOther = separateNewMessagesByCurrentAndOther(user);
 
             if (newMessagesForBothCurrentAndOther.get(0) != null) {
                 removeNewMessageLinesFromNewMessageLog(user, newMessagesForBothCurrentAndOther.get(0));
@@ -415,14 +414,16 @@ class MessagingMethods {
     }
 
     static String getEarliestUnreadMessageTime(List<String> newMessages) {
+        return newMessages.get(0).split(FinalClass.CSV_DELIMITER)[2];
+        /*
         for (String line : newMessages) {
             return line.split(FinalClass.CSV_DELIMITER)[2];
         }
-        return null;
+        return null;*/
     }
 
-    synchronized static List<List> separateNewMessagesByCurrentAndOther(User user) {
-        List<List> result = new ArrayList<>();
+    synchronized static List<List<String>> separateNewMessagesByCurrentAndOther(User user) {
+        List<List<String>> result = new ArrayList<>();
         List<String> messagesForCurrentConversation = new ArrayList<>();
         List<String> messagesForOtherConversations = new ArrayList<>();
 
@@ -449,7 +450,7 @@ class MessagingMethods {
             e.printStackTrace();
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
     private static void saveSenderAndTimeStampToNewMessageLog(User user, String timeStamp) {
@@ -477,7 +478,7 @@ class MessagingMethods {
     }
 
     private static int calculateNumberOfCharactersToMakeLineEqual(int menuTextLength) {
-        return Math.round((FinalClass.MENU_LINE_LENGTH - menuTextLength) / 2);
+        return (FinalClass.MENU_LINE_LENGTH - menuTextLength) / 2;
     }
 
     private static StringBuilder printCertainAmountOfCharacters(int amountToPrint) {
