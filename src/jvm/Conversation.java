@@ -61,6 +61,7 @@ class Conversation {
     }
 
     private void setRecipients(String userName) {
+        this.recipients.clear();
         for (String user: this.participants) {
             if (!user.equals(userName)) {
                 this.recipients.add(user);

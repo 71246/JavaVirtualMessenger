@@ -1,0 +1,13 @@
+
+<timestamp>2019-03-12 12:00:48.837
+Red says:
+Hey, Red!
+<timestamp>2019-03-12 12:00:52.406
+Red says:
+Whaddup?
+<timestamp>2019-03-12 14:26:40.038
+Red says:
+Not much. Doing java.
+<timestamp>2019-03-12 14:26:51.350
+Red says:
+?

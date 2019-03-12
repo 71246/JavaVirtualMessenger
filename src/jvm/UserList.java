@@ -28,7 +28,7 @@ class UserList {
         }
     }
 
-    static boolean isUserNameInvalid(String nameToCheck) {
+    static boolean isUserNotInUserList(String nameToCheck) {
         return !userList.containsKey(nameToCheck);
     }
 

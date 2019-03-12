@@ -1,7 +1,5 @@
 package jvm;
 
-import java.io.*;
-import java.text.ParseException;
 import java.util.Scanner;
 
 import static jvm.MessagingMethods.*;
@@ -10,7 +8,7 @@ import static jvm.UserList.*;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         String answer;
         boolean exitCondition = false;
@@ -19,7 +17,7 @@ public class Main {
 
         //Chat window
         if (user.getConversations().size() >= 1) {
-            printEqualLengthMenuLine(" CHAT ");
+            printEqualLengthMenuLine(" CHAT WINDOW ");
             user.printConversations();
             printEqualLengthMenuLine(" CHAT NUMBER|NEW CHAT (+)|MENU (-) ");
             answer = scanner.nextLine();
@@ -42,6 +40,7 @@ public class Main {
                     answer = scanner.nextLine();
                     break;
                 case "+":
+                    printEqualLengthMenuLine(" CHAT WINDOW ");
                     user.collectConversations();
                     user.printConversations();
                     chat(user, answer);

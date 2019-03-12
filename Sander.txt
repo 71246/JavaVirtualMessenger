@@ -1,0 +1,10 @@
+
+<timestamp>2019-03-12 10:55:22.229
+Sander says:
+Hey, Sander.
+<timestamp>2019-03-12 10:57:59.422
+Sander says:
+1. Can you chat with yourself?
+<timestamp>2019-03-12 10:58:38.327
+Sander says:
+2. Process of group chat naming -> can you create a duplicate group? Or another group with the same participants?

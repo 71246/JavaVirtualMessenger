@@ -9,7 +9,7 @@ import static jvm.UserList.*;
 
 class InitialProcesses {
 
-    static User registerAndLogIn() throws IOException {
+    static User registerAndLogIn() {
         Scanner scanner = new Scanner(System.in);
         String answer;
 
@@ -44,7 +44,7 @@ class InitialProcesses {
         enteredUserName = scanner.next();
 
         //Check for entered user name in the user list
-        while (isUserNameInvalid(enteredUserName)) {
+        while (isUserNotInUserList(enteredUserName)) {
             System.out.print("Invalid user name, try again!\n");
             enteredUserName = scanner.next();
         }
@@ -84,18 +84,18 @@ class InitialProcesses {
         printEqualLengthMenuLine(" REGISTERING ");
 
         //Prompt the user for a username
-        System.out.println("Please enter your desired user name:");
+        System.out.println("USERNAME:");
         enteredUserName = scanner.next();
 
         //Check if the entered username is free to use
-        while (isUserNameInvalid(enteredUserName)) {
+        while (!isUserNotInUserList(enteredUserName)) {
             System.out.print("Invalid user name, please choose another one!\n");
             enteredUserName = scanner.next();
         }
 
         //Prompt the user for a password, explain the requirements
-        System.out.println("Your username is " + enteredUserName + ".\nPlease provide a password.\nThe password has to be at least 8 characters long and it must contain " +
-                "\nat least one upper case, one lower case and one numeric character.");
+        System.out.println("Your username is " + enteredUserName + ".\nPlease provide a password.\nAt least 8 characters" +
+                " long, contains at least one upper case,\n one lower case and one numeric character.\nPASSWORD:");
         enteredPassword = scanner.next();
 
         //Check if entered password meets the requirements

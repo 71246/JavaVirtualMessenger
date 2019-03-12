@@ -1,0 +1,37 @@
+
+<timestamp>2019-03-12 10:13:41.584
+Sander says:
+Hey, guys! Maybe it works this time?!
+<timestamp>2019-03-12 10:14:37.666
+Sander says:
+Huh, maybe not though..
+<timestamp>2019-03-12 10:15:14.435
+Dmitri says:
+Hahaha, yeah. It's like this always.
+<timestamp>2019-03-12 13:47:49.182
+Sander says:
+s.
+<timestamp>2019-03-12 13:47:55.550
+Sander says:
+What's up?!
+<timestamp>2019-03-12 14:10:57.176
+Dmitri says:
+What have you been writing here?
+<timestamp>2019-03-12 14:12:21.474
+Roman says:
+Haha.
+<timestamp>2019-03-12 14:12:32.123
+Sander says:
+Just testing guys.
+<timestamp>2019-03-12 14:13:16.743
+Dmitri says:
+It seems you got it to work?!?!
+<timestamp>2019-03-12 14:13:33.405
+Sander says:
+Yes, it would seem so..
+<timestamp>2019-03-12 14:13:56.799
+Dmitri says:
+Huh, very nice. Good job!
+<timestamp>2019-03-12 14:14:08.994
+Sander says:
+Aww, thanks.
